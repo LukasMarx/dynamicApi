@@ -5,8 +5,11 @@ services:
 script:
 - npm run build
 before_install:
-- openssl aes-256-cbc -K "$jhobfhjblfd8972hkj"
-  -in "do-deployPPK.enc" -out "do-deployPPK" -iv 0 -d
+- openssl aes-256-cbc -K "$password" -in "do-deployPPK.enc" -out "do-deployPPK" -iv
+  "$password" -d
 - bash _scripts/install.sh
 after_success:
-  - bash _scripts/deploy.sh
+- bash _scripts/deploy.sh
+env:
+  global:
+    secure: KYk7QH3mTO61AE4rvqNz0ztA/A0uNc1ES3TUxLfFOqLry5tH3woqv+fdV5xtwJafv0ZSJwvYs+PQwh9qHa/Y5edUIcDei2DyYywA6j5TfUO+e7L2Cs4uK09EuR+jJFqH/TN0N/peq8nHTWSGoZ+Pm+3xPDRFP83HjQWyUbix7WtgrlKpL0P58lzFMYHSoVEkS91K9RAGfoMHdM1UecxnjLasGbDOot6TmWvckaFIDiNfZjDLN/BoXyxaQ/aN3NlTyMIoFUF88MHGiycA02Z298e/Q7b8pYeXRV0tANvMTFLlzhs8IgpTKgTJTWmdouov5zrbBD/afN5kdu9aG4Ou46jNrnScy93FBdt6n7dFCIZfLweINsj9mgykIyDiIzQ0eQVERNCxGfCY3DsfOzAWLY5Wkny9WGuHGkrUUBidWpLTAjgQy2yZIN71ErxBmIx1Jm1m1gmEPqsSMX2n7tW6Pcw8AwqtLjgXiadE+tmErxhrInv1xmH+xdzWSHLLueuq/I//xp4iVv7Ialeo6Ce0YbdICRylRU/uJBZ9sDVL/ElklphImAwUFSguc5r3sDj+YtOB4AqX2r+bRVLvB8Dlh/DKjwB1MtDbh1BOZhm9KvES1m/em7H9Lx1YkVIpB2V/8Z3An3iyurklh8cKM0xux6ZInSQDex0qm6zV/56Cgws=
