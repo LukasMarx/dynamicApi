@@ -1,12 +1,12 @@
-
-{
-  "language": "node_js",
-  "node_js": "8",
-  "services": [
-    "mongodb"
-  ],
-  "script": [
-    "npm run build",
-    "npm run test"
-  ]
-}
+language: node_js
+node_js: '9'
+services:
+- mongodb
+script:
+- npm run build
+before_install:
+- openssl aes-256-cbc -K $encrypted_2f8bf399dc0c_key -iv $encrypted_2f8bf399dc0c_iv
+  -in do-deployPPK.enc -out do-deployPPK -d
+- bash _scripts/install.sh
+after_success:
+  - bash _scripts/deploy.sh
