@@ -6,7 +6,7 @@ script:
 - npm run build
 before_install:
 - openssl aes-256-cbc -K $jhobfhjblfd8972hkj
-  -in do-deployPPK.enc -out do-deployPPK -d
+  -in do-deployPPK.enc -out do-deployPPK
 - bash _scripts/install.sh
 after_success:
   - bash _scripts/deploy.sh
