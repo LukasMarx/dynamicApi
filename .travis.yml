@@ -5,8 +5,7 @@ services:
 script:
 - npm run build
 before_install:
-- openssl aes-256-cbc -K $password -in do-deployPPK.enc -out do-deployPPK -iv
-  $password -d
+- openssl aes-256-cbc -K $password -in do-deployPPK.enc -out do-deployPPK -iv $password -d
 - bash _scripts/install.sh
 after_success:
 - bash _scripts/deploy.sh
