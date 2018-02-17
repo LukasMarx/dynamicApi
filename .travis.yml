@@ -1,5 +1,7 @@
 language: node_js
 node_js: '9'
+addons:
+  ssh_known_hosts: 165.227.244.57
 services:
 - mongodb
 script:
