@@ -1,7 +1,8 @@
 Host 165.227.244.57
-	User				          	deploy
-	IdentityFile		      	~/.ssh/id_rsa
-	StrictHostKeyChecking 	no
-	PasswordAuthentication	no
-	CheckHostIP			      	no
-	BatchMode			        	yes
+User deploy
+IdentityFile ~/.ssh/id_rsa
+StrictHostKeyChecking no
+PasswordAuthentication no
+PubKeyAuthentication yes
+CheckHostIP no
+BatchMode yes
