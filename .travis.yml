@@ -12,7 +12,6 @@ before_deploy:
 - eval "$(ssh-agent -s)"
 - chmod 600 do-deployPPK
 - cp do-deployPPK ~/.ssh/id_rsa
-- ssh-add do-deployPPK
 deploy:
   provider: script
   skip_cleanup: true
