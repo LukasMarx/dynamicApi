@@ -4,7 +4,9 @@ import * as bodyParser from "body-parser";
 import * as lusca from "lusca";
 
 import * as dotenv from "dotenv";
+if (process.env.NODE_ENV !== 'production') {
 dotenv.config();
+}
 
 import * as path from "path";
 import * as passport from "passport";
