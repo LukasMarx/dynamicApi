@@ -11,6 +11,7 @@ before_deploy:
   -in do-deployPPK.enc -out do-deployPPK -d
 - eval "$(ssh-agent -s)"
 - chmod 600 do-deployPPK
+- cp do-deployPPK ~/.ssh/id_rsa
 - ssh-add do-deployPPK
 deploy:
   provider: script
