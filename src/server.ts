@@ -1,11 +1,4 @@
-import * as errorHandler from "errorhandler";
-
-const app = require("./app");
-
-/**
- * Error Handler. Provides full stack - remove for production
- */
-app.use(errorHandler());
+import {app} from '../src/app';
 
 /**
  * Start Express server.

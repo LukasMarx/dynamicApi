@@ -20,7 +20,7 @@ import {Strategy} from './passport/jwtStrategy'
 
 
 // Create Express server
-const app = express();
+export const app = express();
 
 // Express configuration
 app.set("port", process.env.PORT || 8000);
@@ -48,6 +48,3 @@ app.get("/admin/content", privateApi.getContent);
 app.post("/admin/content", privateApi.postContent);
 
 app.use("/", publicApi.publicApi);
-
-
-module.exports = app;
