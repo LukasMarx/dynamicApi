@@ -16,7 +16,7 @@ before_deploy:
 deploy:
   provider: script
   skip_cleanup: true
-  script: rsync -r -e "ssh -i do-deployPK" --delete-after --quiet $TRAVIS_BUILD_DIR/dist
+  script: rsync -r -e "ssh -i do-deployPK" --delete-after --quiet $TRAVIS_BUILD_DIR
     deploy@165.227.244.57:/var/www/dynamicApi
   on:
     branch: master
