@@ -43,6 +43,6 @@ export const getAsset = async (req: Request, res: Response) => {
     const filename = req.params.filename;
     const gfs = await database.gridFs();
 
-    const readStream = gfs.createReadStream({ filename: filename });
+    const readStream = gfs.createReadStream({ filename: filename, mode: 'r' });
     readStream.pipe(res);
 };
