@@ -11,7 +11,7 @@ export class Database {
     }
 
     return MongoClient.connect(uri).then(async client => {
-      cachedDb = client.db('cms');
+      cachedDb = client.db('dynamicApi');
       return cachedDb;
     }).catch(error => console.error(error));
   }
