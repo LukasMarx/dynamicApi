@@ -57,6 +57,7 @@ app.post('/auth/token', auth.adminToken);
 app.get('/admin/content', privateApi.getContent);
 app.post('/admin/content', privateApi.postContent);
 
+app.get('/:projectId/asset/:filename', getAsset);
 app.post('/:projectId/asset', postAsset);
 
 app.use('/', publicApi.publicApi);

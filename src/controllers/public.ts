@@ -7,7 +7,6 @@ import { makeExecutableSchema } from 'graphql-tools';
 import { Type } from '../models/type';
 import { Response, Request, NextFunction, Router } from 'express';
 import { dynamicJWT } from '../passport/dynamicJwt';
-import { getAsset } from './asset';
 
 export const publicApi = Router();
 
@@ -163,4 +162,3 @@ function canContinue(crud: string, method: string, type: Type, role?: string) {
 
 publicApi.get('/:projectId/api', getApi);
 publicApi.post('/:projectId/api', postApi);
-publicApi.get('/:projectId/asset/:filename', getAsset);

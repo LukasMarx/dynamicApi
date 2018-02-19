@@ -47,5 +47,5 @@ export const getAsset = async (req: Request, res: Response) => {
         filename: filename,
         metadata: { projectId: projectId }
     });
-    res.send(readStream);
+    readStream.pipe(res);
 };
