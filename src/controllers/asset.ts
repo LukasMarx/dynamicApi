@@ -3,6 +3,7 @@ import { IncomingForm } from 'formidable';
 import { database } from '../services/database';
 import { Collection } from 'mongodb';
 import { Asset } from '../models/asset';
+import * as sharp from 'sharp';
 import * as fs from 'fs';
 
 export const postAsset = async (req: Request, res: Response) => {
@@ -43,10 +44,23 @@ export const getAsset = async (req: Request, res: Response) => {
     const filename = req.params.filename;
     const gfs = await database.gridFs();
 
+    const format = req.params.format;
+    const width = req.params.width;
+
     const readStream = gfs.createReadStream({
         filename: filename,
         root: 'assets',
         metadata: { projectId: projectId }
     });
-    readStream.pipe(res);
+
+    let transform = sharp();
+    if (format) {
+        transform = transform.toFormat(format);
+        res.type('image/' + format);
+    }
+    if (width) {
+        transform = transform.resize(width);
+    }
+
+    readStream.pipe(transform).pipe(res);
 };
