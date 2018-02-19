@@ -43,9 +43,17 @@ export const getAsset = async (req: Request, res: Response) => {
     const filename = req.params.filename;
     const gfs = await database.gridFs();
 
-    const readStream = gfs.createReadStream({
-        filename: filename,
-        metadata: { projectId: projectId }
-    });
-    readStream.pipe(res);
+    gfs.findOne(
+        {
+            filename: filename,
+            metadata: { projectId: projectId }
+        },
+        (err, file) => {
+            if (err) {
+                res.sendStatus(404);
+            }
+            const readStream = gfs.createReadStream({ _id: file._id });
+            readStream.pipe(res);
+        }
+    );
 };
