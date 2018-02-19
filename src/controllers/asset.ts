@@ -47,20 +47,24 @@ export const getAsset = async (req: Request, res: Response) => {
     const format = req.params.format;
     const width = req.params.width;
 
-    const readStream = gfs.createReadStream({
-        filename: filename,
-        root: 'assets',
-        metadata: { projectId: projectId }
-    });
+    try {
+        const readStream = gfs.createReadStream({
+            filename: filename,
+            root: 'assets',
+            metadata: { projectId: projectId }
+        });
 
-    let transform = sharp();
-    if (format) {
-        transform = transform.toFormat(format);
-        res.type('image/' + format);
-    }
-    if (width) {
-        transform = transform.resize(width);
-    }
+        let transform = sharp();
+        if (format) {
+            transform = transform.toFormat(format);
+            res.type('image/' + format);
+        }
+        if (width) {
+            transform = transform.resize(parseInt(width));
+        }
 
-    readStream.pipe(transform).pipe(res);
+        readStream.pipe(transform).pipe(res);
+    } catch (error) {
+        res.sendStatus(400);
+    }
 };
