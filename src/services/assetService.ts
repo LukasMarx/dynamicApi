@@ -12,11 +12,11 @@ export class AssetService {
         const db = await database.connect();
         const assets = <Collection<any>>db.collection('assets.files');
 
-        const result = await assets
+        let result = await assets
             .find({ metadata: { projectId: projectId } })
             .toArray();
 
-        result.map(file => {
+        result = result.map(file => {
             return {
                 fileName: file.filename,
                 size: file.length,
