@@ -8,25 +8,40 @@ import { Collection } from 'mongodb';
 const s3 = new S3();
 
 export class AssetService {
-    async getAll(projectId: string) {
+    async getAll(projectId: string): Promise<Asset[]> {
         const db = await database.connect();
-        const assets = <Collection<Asset>>db.collection('assets.files');
+        const assets = <Collection<any>>db.collection('assets.files');
 
         const result = await assets
             .find({ metadata: { projectId: projectId } })
             .toArray();
+
+        result.map(file => {
+            return {
+                fileName: file.filename,
+                size: file.length,
+                type: file.contentType,
+                projectId: file.metadata.projectId
+            };
+        });
 
         return result;
     }
 
     async get(projectId: string, id: string): Promise<Asset> {
         const db = await database.connect();
-        const assets = <Collection<Asset>>db.collection('assets.files');
+        const files = <Collection<any>>db.collection('assets.files');
 
-        return assets.findOne({
+        const file = await files.findOne({
             metadata: { projectId: projectId },
             filename: id
         });
+        return {
+            fileName: file.filename,
+            size: file.length,
+            type: file.contentType,
+            projectId: file.metadata.projectId
+        };
     }
 }
 
