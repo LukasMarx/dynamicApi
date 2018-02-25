@@ -1,8 +1,22 @@
 import { makeExecutableSchema } from 'graphql-tools';
-import { dynamicSchemaService } from '../services/dynamicSchemaService';
-import { projectService } from '../services/projectService';
-import { authKeyService } from '../services/authKeyService';
-import { assetService } from '../services/assetService';
+
+import {
+    type,
+    types,
+    createType,
+    updateType,
+    removeType
+} from './resolvers/type';
+import { project, projects, createProject } from './resolvers/project';
+import { authKey } from './resolvers/authKey';
+import { asset, assets } from './resolvers/asset';
+import {
+    createAuthenticationProvider,
+    updateAuthenticationProvider,
+    deleteAuthenticationProvider,
+    authenticationProvider,
+    authenticationProviders
+} from './resolvers/authenticationProvider';
 
 let cachedDb = null;
 
@@ -56,7 +70,7 @@ const typeDefs = `
   type Account{
     id: String!
     email: String!
-    forname: String
+    forename: String
     surname: String
   }
 
@@ -77,6 +91,38 @@ const typeDefs = `
     size: Int!
   }
 
+  type AuthenticationProvider{
+    id: String!
+    name: String!
+    cloudProvider: String!
+    targetType: Type
+    mappings: [AuthenticationMapping]
+    projectId: String!
+    clientId: String!
+  }
+
+  input AuthenticationProviderInput{
+    name: String!
+    cloudProvider: String!
+    targetType: String!
+    mappings: [AuthenticationMappingInput]
+    clientId: String!
+  }
+
+  type AuthenticationMapping{
+    userId: String!
+    cloudProvider: String!
+    name: String
+    pictureUrl: String
+  }
+
+  input AuthenticationMappingInput{
+    userId: String!
+    cloudProvider: String!
+    name: String
+    pictureUrl: String
+  }
+
   type Query{
     type(projectId: String!, name: String): Type
     types(projectId: String!): [Type]
@@ -85,6 +131,8 @@ const typeDefs = `
     authKey(projectId: String!): String
     assets(projectId: String!): [Asset]
     asset(projectId: String!, name: String): Asset
+    authenticationProviders(projectId: String!): [AuthenticationProvider]
+    authenticationProvider(projectId: String!, id: String!): AuthenticationProvider
   }
 
   type Mutation{
@@ -92,92 +140,38 @@ const typeDefs = `
     removeType(projectId: String!, name: String): String
     updateType(projectId: String!, name: String!, type: TypeInput!): Type
     createType(projectId: String!, type: TypeInput!): Type
-    createProject(input: ProjectInput): Project
+    createProject(input: ProjectInput!): Project
+    createAuthenticationProvider(projectId: String!, authProvider: AuthenticationProviderInput!): AuthenticationProvider
+    updateAuthenticationProvider(projectId: String!, id: String!, authProvider: AuthenticationProviderInput!): AuthenticationProvider
+    deleteAuthenticationProvider(projectId: String!, id: String!): AuthenticationProvider
   }
 `;
 
 const resolvers = {
-  Query: {
-    async type(obj: any, args: any, context: any, info: any)  {
-      const res = await dynamicSchemaService.getType(args.projectId, args.name).catch();
-      if (res.fields) {
-        let array = [];
-        for (let key in res.fields) {
-          array.push(res.fields[key]);
-        }
-        (<any>res).fields = array;
-      } else {
-        (<any>res).fields = [];
-      }
-
-      if (res.permissions) {
-        let array = [];
-        for (let key in res.permissions) {
-          array.push(res.permissions[key]);
-        }
-        (<any>res).permissions = array;
-      } else {
-        (<any>res).permissions = [];
-      }
-      return res;
+    Query: {
+        type: type,
+        types: types,
+        project: project,
+        projects: projects,
+        authKey: authKey,
+        asset: asset,
+        assets: assets,
+        authenticationProvider: authenticationProvider,
+        authenticationProviders: authenticationProviders
     },
-    async types(obj: any, args: any, context: any, info: any)  {
-      const res = await dynamicSchemaService.getAllTypes(args.projectId).catch();
-      res.forEach(type => {
-        if (type.fields) {
-          let array = [];
-          for (let key in type.fields) {
-            array.push(type.fields[key]);
-          }
-          (<any>type).fields = array;
-        } else {
-          (<any>type).fields = [];
-        }
-        if (type.permissions) {
-          let array = [];
-          for (let key in type.permissions) {
-            array.push(type.permissions[key]);
-          }
-          (<any>type).permissions = array;
-        } else {
-          (<any>type).permissions = [];
-        }
-      });
-
-      return res;
-    },
-    project(obj: any, args: any, context: any, info: any) {
-      return projectService.getProject(args.id, args.name).catch();
-    },
-    projects(obj: any, args: any, context: any, info: any) {
-      return projectService.getAllProjects(context.user.id);
-    },
-    authKey(obj: any, args: any, context: any, info: any) {
-      return authKeyService.getKey(args.projectId);
-    },
-    assets(obj: any, args: any, context: any, info: any) {
-      return assetService.getAll(args.projectId);
-    },
-    asset(obj: any, args: any, context: any, info: any) {
-      return assetService.get(args.projectId, args.name);
+    Project: {},
+    Mutation: {
+        createType: createType,
+        updateType: updateType,
+        removeType: removeType,
+        createProject: createProject,
+        createAuthenticationProvider: createAuthenticationProvider,
+        updateAuthenticationProvider: updateAuthenticationProvider,
+        deleteAuthenticationProvider: deleteAuthenticationProvider
     }
-  },
-  Project: {},
-  Mutation: {
-    createType(obj: any, args: any, context: any, info: any)  {
-      return dynamicSchemaService.addType(args.projectId, args.type).catch();
-    },
-    updateType(obj: any, args: any, context: any, info: any)  {
-      return dynamicSchemaService.updateType(args.projectId, args.name, args.type);
-    },
-    removeType(obj: any, args: any, context: any, info: any)  {
-      return dynamicSchemaService.removeType(args.projectId, args.name);
-    },
-
-    createProject(obj: any, args: any, context: any, info: any)  {
-      return projectService.addProject(context.user.id, args.input);
-    }
-  }
 };
 
-export const schema = makeExecutableSchema({ typeDefs: typeDefs, resolvers: resolvers });
+export const schema = makeExecutableSchema({
+    typeDefs: typeDefs,
+    resolvers: resolvers
+});

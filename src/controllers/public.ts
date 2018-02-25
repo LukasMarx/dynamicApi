@@ -1,5 +1,5 @@
 import { graphql } from 'graphql';
-import { dynamicSchemaService } from '../services/dynamicSchemaService';
+import { dynamicSchemaService } from '../services/typeService';
 import { jsonToSchemaService } from '../services/jsonToSchemaService';
 import { contentService } from '../services/contentService';
 import * as getFieldNames from 'graphql-list-fields';

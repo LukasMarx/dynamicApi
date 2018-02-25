@@ -18,6 +18,7 @@ import * as publicApi from './controllers/public';
 import * as auth from './controllers/auth';
 import { Strategy } from './passport/jwtStrategy';
 import { postAsset, getAsset } from './controllers/asset';
+import { getToken } from './controllers/userAuth';
 
 // Create Express server
 export const app = express();
@@ -61,5 +62,7 @@ app.get('/:projectId/asset/:filename/:format/:width', getAsset);
 app.get('/:projectId/asset/:filename/:format', getAsset);
 app.get('/:projectId/asset/:filename', getAsset);
 app.post('/:projectId/asset', postAsset);
+
+app.post('/:projectId/auth/:provider', getToken);
 
 app.use('/', publicApi.publicApi);
