@@ -13,8 +13,11 @@ export const getToken = async (req: Request, res: Response) => {
     try {
         const providerId = req.params.provider;
         const token = req.body.token;
-
         const projectId = req.params.projectId;
+
+        if (!providerId || !token || !projectId) {
+            return res.sendStatus(400);
+        }
 
         const provider = await authenticationProviderService.getAuthenticationProvider(
             projectId,
