@@ -61,6 +61,7 @@ export const getToken = async (req: Request, res: Response) => {
 
         result['projectId'] = projectId;
         result['type'] = provider.targetType;
+        result['method'] = 'userToken';
 
         const jwtToken = await generateToken(projectId, result);
         res.json({ token: jwtToken });

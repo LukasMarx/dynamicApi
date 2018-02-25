@@ -16,7 +16,6 @@ export const getApi = async (req: Request, res: Response) => {
     const projectId = req.params.projectId;
 
     const authenticationInfo = req.authInfo;
-    console.log(req.authInfo);
 
     const schema = await generateContentSchema(projectId);
     let variables;
@@ -25,7 +24,6 @@ export const getApi = async (req: Request, res: Response) => {
     } else {
         variables = req.query.variables;
     }
-    console.log(variables);
     const result = await graphql(
         schema,
         req.query.query,
