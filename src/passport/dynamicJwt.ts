@@ -59,7 +59,8 @@ export const dynamicJWT = async function(
                 method: verified.method,
                 role: verified.role,
                 projectId: verified.projectId,
-                readOnly: verified.readOnly
+                readOnly: verified.readOnly,
+                userId: verified.sub
             };
             return next();
         }

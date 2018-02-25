@@ -44,7 +44,7 @@ const generateContentSchema = async (projectId: string) => {
             info: any
         ) => {
             return contentService
-                .insert(projectId, type, args.input)
+                .insert(projectId, type, args.input, 'admin', context.userId)
                 .catch(error => console.error(error));
         };
         resolvers.Mutation['update' + type.name] = (
@@ -54,7 +54,13 @@ const generateContentSchema = async (projectId: string) => {
             info: any
         ) => {
             return contentService
-                .update(args.projectId, type, args.input.id, args.input)
+                .update(
+                    args.projectId,
+                    type,
+                    args.input.id,
+                    args.input,
+                    'admin'
+                )
                 .catch(error => console.error(error));
         };
         resolvers.Query[type.name + 's'] = (
@@ -68,7 +74,9 @@ const generateContentSchema = async (projectId: string) => {
                     args.projectId,
                     type,
                     { fields: getFieldNames(info) },
-                    false
+                    false,
+                    'admin',
+                    context.userId
                 )
                 .catch(error => console.error(error));
         };
@@ -86,7 +94,9 @@ const generateContentSchema = async (projectId: string) => {
                         filter: [{ field: 'id', value: args.id }],
                         fields: getFieldNames(info)
                     },
-                    false
+                    false,
+                    'admin',
+                    context.userId
                 )
                 .catch(error => console.error(error));
         };

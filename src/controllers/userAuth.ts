@@ -50,7 +50,13 @@ export const getToken = async (req: Request, res: Response) => {
         result[mappings.cloudProvider] = validationResult.cloudProvider;
 
         if (!user) {
-            await contentService.insert(projectId, targetType, result);
+            await contentService.insert(
+                projectId,
+                targetType,
+                result,
+                'admin',
+                validationResult.userId
+            );
         }
 
         result['projectId'] = projectId;

@@ -1,11 +1,21 @@
+export enum Visibility {
+    ANYONE,
+    AUTHKEY,
+    USER,
+    OWNER,
+    ADMIN
+}
+
 export interface Field {
-  name: string;
+    name: string;
 
-  type: string;
+    type: string;
 
-  displayGroup: string;
+    displayGroup: string;
 
-  fullPage: boolean;
+    fullPage: boolean;
 
-  unique: boolean;
+    visibility: Visibility;
+
+    unique: boolean;
 }

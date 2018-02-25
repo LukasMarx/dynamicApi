@@ -76,7 +76,13 @@ const generateContentSchema = async (projectId: string) => {
                 return null;
             }
             return contentService
-                .insert(projectId, type, args.input)
+                .insert(
+                    projectId,
+                    type,
+                    args.input,
+                    context.method,
+                    context.userId
+                )
                 .catch(error => console.error(error));
         };
         resolvers.Mutation['update' + type.name] = (
@@ -92,7 +98,13 @@ const generateContentSchema = async (projectId: string) => {
                 return null;
             }
             return contentService
-                .update(projectId, type, args.input.id, args.input)
+                .update(
+                    projectId,
+                    type,
+                    args.input.id,
+                    args.input,
+                    context.method
+                )
                 .catch(error => console.error(error));
         };
         resolvers.Query[type.name + 's'] = (
@@ -105,14 +117,21 @@ const generateContentSchema = async (projectId: string) => {
                 return null;
             }
             return contentService
-                .getAll(projectId, type, {
-                    orderBy: args.orderBy,
-                    descending: args.descending,
-                    skip: args.skip,
-                    limit: args.limit,
-                    filter: args.filter,
-                    fields: getFieldNames(info)
-                })
+                .getAll(
+                    projectId,
+                    type,
+                    {
+                        orderBy: args.orderBy,
+                        descending: args.descending,
+                        skip: args.skip,
+                        limit: args.limit,
+                        filter: args.filter,
+                        fields: getFieldNames(info)
+                    },
+                    true,
+                    context.method,
+                    context.userId
+                )
                 .catch(error => console.error(error));
         };
         resolvers.Query[type.name] = (
@@ -125,10 +144,17 @@ const generateContentSchema = async (projectId: string) => {
                 return null;
             }
             return contentService
-                .get(projectId, type, {
-                    filter: [args.filter],
-                    fields: getFieldNames(info)
-                })
+                .get(
+                    projectId,
+                    type,
+                    {
+                        filter: [args.filter],
+                        fields: getFieldNames(info)
+                    },
+                    true,
+                    context.method,
+                    context.userId
+                )
                 .catch(error => console.error(error));
         };
     }

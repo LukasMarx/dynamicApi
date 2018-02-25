@@ -2,10 +2,28 @@ import { Type } from '../models/type';
 import { v4 } from 'uuid';
 import { database } from './database';
 import { Collection } from 'mongodb';
+import { Field, Visibility } from '../models/field';
 
 export class ContentService {
-    async insert(projectId: string, type: Type, value: any) {
-        const generatedEntity = this.generateEntity(projectId, type, value);
+    async insert(
+        projectId: string,
+        type: Type,
+        value: any,
+        authMethod: string,
+        userId: string
+    ) {
+        for (let key in type.fields) {
+            if (!isFieldVisible(type.fields[key], authMethod)) {
+                throw new Error("You don't have access to the field " + key);
+            }
+        }
+
+        const generatedEntity = this.generateEntity(
+            projectId,
+            type,
+            value,
+            userId
+        );
 
         const db = await database.connect();
         const values = <Collection<any>>db.collection('values');
@@ -18,11 +36,10 @@ export class ContentService {
         projectId: string,
         type: Type,
         filter: any,
-        isPublic: boolean = true
+        isPublic: boolean = true,
+        authMethod: string,
+        userId: string
     ) {
-        // if (!fields) fields = [];
-        // if (fields) fields = fields.filter(f => f !== '_typename');
-
         const db = await database.connect();
         const values = <Collection<any>>db.collection('values');
         const params: any = { projectId: projectId, type: type.name };
@@ -35,13 +52,53 @@ export class ContentService {
                 params[input.field] = input.value;
             }
         }
-        const entity = await values.findOne(params);
 
-        return entity;
+        const excluded = {};
+        for (let key in type.fields) {
+            if (!isFieldVisible(type.fields[key], authMethod)) {
+                excluded[key] = 0;
+            }
+        }
+
+        const entities = await values
+            .find(params, excluded)
+            .project(excluded)
+            .toArray();
+
+        if (entities.length > 0) {
+            const entity = entities[0];
+            for (let key in type.fields) {
+                if (
+                    type.fields[key].visibility == Visibility.OWNER &&
+                    entity._owner !== userId
+                ) {
+                    entity[key] = null;
+                }
+            }
+            return entity;
+        }
+        return null;
     }
 
-    async update(projectId: string, type: Type, id: string, value: any) {
-        const generatedEntity = this.generateEntity(projectId, type, value);
+    async update(
+        projectId: string,
+        type: Type,
+        id: string,
+        value: any,
+        authMethod: string
+    ) {
+        for (let key in type.fields) {
+            if (!isFieldVisible(type.fields[key], authMethod)) {
+                throw new Error("You don't have access to the field " + key);
+            }
+        }
+
+        const generatedEntity = this.generateEntity(
+            projectId,
+            type,
+            value,
+            null
+        );
 
         value.type = type.name;
         value.projectId = projectId;
@@ -67,7 +124,9 @@ export class ContentService {
             skip?: number;
             fields?: string[];
         },
-        isPublic: boolean = true
+        isPublic: boolean = true,
+        authMethod: string,
+        userId: string
     ) {
         const db = await database.connect();
         const values = <Collection<any>>db.collection('values');
@@ -82,12 +141,35 @@ export class ContentService {
         if (isPublic) {
             params.public = true;
         }
+
+        const excluded = {};
+        for (let key in type.fields) {
+            if (!isFieldVisible(type.fields[key], authMethod)) {
+                excluded[key] = 0;
+            }
+        }
+
         const result = await values
             .find(params)
             .sort(filter.orderBy || '_id', filter.descending ? -1 : 1)
             .skip(filter.skip || 0)
             .limit(filter.limit || 0)
+            .project(excluded)
             .toArray();
+
+        if (result.length > 0) {
+            result.forEach(entity => {
+                for (let key in type.fields) {
+                    if (
+                        type.fields[key].visibility == Visibility.OWNER &&
+                        entity._owner !== userId
+                    ) {
+                        entity[key] = null;
+                    }
+                }
+            });
+        }
+
         return result;
     }
 
@@ -126,12 +208,20 @@ export class ContentService {
         return result;
     }
 
-    private generateEntity(projectId: string, type: Type, value: any) {
+    private generateEntity(
+        projectId: string,
+        type: Type,
+        value: any,
+        userId: string
+    ) {
         const generatedEntity: any = {};
 
         generatedEntity.type = type.name;
         generatedEntity.projectId = projectId;
         generatedEntity.id = v4();
+        if (userId) {
+            generatedEntity._owner = userId;
+        }
 
         for (let key in type.fields) {
             let field = type.fields[key];
@@ -173,6 +263,49 @@ export class ContentService {
             }
         }
         return generatedEntity;
+    }
+}
+
+function isFieldVisible(field: Field, authMethod: string): Boolean {
+    if (!field || !authMethod) return false;
+    switch (authMethod) {
+        case 'anonymous': {
+            if (field.visibility == Visibility.ANYONE) return true;
+            return false;
+        }
+        case 'authKey': {
+            if (
+                field.visibility == Visibility.ANYONE ||
+                field.visibility == Visibility.AUTHKEY
+            )
+                return true;
+            return false;
+        }
+        case 'user': {
+            if (
+                field.visibility == Visibility.ANYONE ||
+                field.visibility == Visibility.AUTHKEY ||
+                field.visibility == Visibility.USER
+            )
+                return true;
+            return false;
+        }
+        case 'owner': {
+            if (
+                field.visibility == Visibility.ANYONE ||
+                field.visibility == Visibility.AUTHKEY ||
+                field.visibility == Visibility.USER ||
+                field.visibility == Visibility.OWNER
+            )
+                return true;
+            return false;
+        }
+        case 'admin': {
+            return true;
+        }
+        default: {
+            return false;
+        }
     }
 }
 

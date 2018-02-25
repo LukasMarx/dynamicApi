@@ -58,6 +58,7 @@ const typeDefs = `
     type: String!
     displayGroup: String
     fullPage: Boolean
+    visibility: String
   }
 
   input FieldInput {
@@ -65,6 +66,7 @@ const typeDefs = `
     type: String!
     displayGroup: String
     fullPage: Boolean
+    visibility: String
   }
 
   type Account{
