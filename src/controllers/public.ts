@@ -157,7 +157,7 @@ const generateContentSchema = async (projectId: string) => {
                     projectId,
                     type,
                     {
-                        filter: [args.filter],
+                        filter: args.filter,
                         fields: getFieldNames(info)
                     },
                     true,
