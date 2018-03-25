@@ -268,7 +268,7 @@ export class ContentService {
         };
         if (filter.orderBy) {
             const sort = { $sort: {} };
-            sort.$sort[filter.orderBy] = filter.descending ? 1 : -1;
+            sort.$sort[filter.orderBy] = filter.descending ? -1 : 1;
             aggregation.$facet.edges.push(<any>sort);
 
             if (filter.after) {
