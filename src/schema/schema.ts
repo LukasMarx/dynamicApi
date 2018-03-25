@@ -1,12 +1,6 @@
 import { makeExecutableSchema } from 'graphql-tools';
 
-import {
-    type,
-    types,
-    createType,
-    updateType,
-    removeType
-} from './resolvers/type';
+import { type, types, createType, updateType, removeType } from './resolvers/type';
 import { project, projects, createProject } from './resolvers/project';
 import { authKey } from './resolvers/authKey';
 import { asset, assets } from './resolvers/asset';
@@ -26,6 +20,7 @@ const typeDefs = `
     name: String!
     fields: [Field]
     permissions: [CrudPermission]
+    requiresPublication: Boolean
   }
 
   type CrudPermission {
@@ -51,6 +46,7 @@ const typeDefs = `
     name: String!,
     fields: [FieldInput]
     permissions: [CrudPermissionInput]
+    requiresPublication: Boolean
   }
 
   type Field {
@@ -58,6 +54,7 @@ const typeDefs = `
     type: String!
     displayGroup: String
     fullPage: Boolean
+    list: Boolean
     visibility: String
   }
 
@@ -66,6 +63,7 @@ const typeDefs = `
     type: String!
     displayGroup: String
     fullPage: Boolean
+    list: Boolean
     visibility: String
   }
 

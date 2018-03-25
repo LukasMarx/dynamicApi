@@ -18,4 +18,6 @@ export interface Field {
     visibility: Visibility;
 
     unique: boolean;
+
+    list: boolean;
 }

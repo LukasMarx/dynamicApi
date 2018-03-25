@@ -24,13 +24,7 @@ export const getApi = async (req: Request, res: Response) => {
     } else {
         variables = req.query.variables;
     }
-    const result = await graphql(
-        schema,
-        req.query.query,
-        null,
-        authenticationInfo,
-        variables
-    );
+    const result = await graphql(schema, req.query.query, null, authenticationInfo, variables);
     if (result) res.send(result);
 };
 
@@ -42,13 +36,7 @@ export const postApi = async (req: Request, res: Response) => {
 
     const schema = await generateContentSchema(projectId);
 
-    const result = await graphql(
-        schema,
-        body.query,
-        null,
-        authenticationInfo,
-        body.variables
-    );
+    const result = await graphql(schema, body.query, null, authenticationInfo, body.variables);
     if (result) res.send(result);
 };
 
@@ -61,66 +49,93 @@ const generateContentSchema = async (projectId: string) => {
     const resolvers = { Mutation: {}, Query: {} };
 
     for (let type of types) {
-        resolvers.Mutation['create' + type.name] = (
-            obj: any,
-            args: any,
-            context: any,
-            info: any
-        ) => {
+        const customTypedFields = jsonToSchemaService.getAllCustomTypedFields(type);
+
+        customTypedFields.forEach(field => {
+            if (!resolvers[type.name]) resolvers[type.name] = {};
+
+            if (field.list) {
+                resolvers[type.name][field.name] = async (obj: any, args: any, context: any, info: any) => {
+                    const fieldType = await dynamicSchemaService.getType(projectId, field.type);
+                    const filter = { field: ['_refs'], value: { type: type.name, field: field.name, id: obj.id } };
+                    if (args.filter) {
+                        args.filter.push(filter);
+                    }
+                    return contentService.getAllAsConnection(
+                        projectId,
+                        fieldType,
+                        {
+                            filter: args.filter ? args.filter : [filter],
+                            skip: args.skip,
+                            after: args.after,
+                            descending: args.descending,
+                            limit: args.limit,
+                            fields: args.fields,
+                            orderBy: args.orderBy
+                        },
+                        false,
+                        context.method,
+                        context.userId
+                    );
+                };
+
+                resolvers.Mutation['assign' + field.name + 'To' + type.name] = async (obj: any, args: any, context: any, info: any) => {
+                    const fieldType = await dynamicSchemaService.getType(projectId, field.type);
+                    if (args.assignments) {
+                        args.assignments.forEach(assignment => {
+                            contentService.assign(projectId, type, fieldType, assignment.parent, assignment.child, field.name, context.method);
+                        });
+                    }
+                };
+
+                resolvers.Mutation['deassign' + field.name + 'From' + type.name] = async (obj: any, args: any, context: any, info: any) => {
+                    const fieldType = await dynamicSchemaService.getType(projectId, field.type);
+                    if (args.assignments) {
+                        args.assignments.forEach(assignment => {
+                            contentService.deassign(projectId, type, fieldType, assignment.parent, assignment.child, field.name, context.method);
+                        });
+                    }
+                };
+            } else {
+                resolvers[type.name][field.name] = async (obj: any, args: any, context: any, info: any) => {
+                    const filter = { id: obj[field.name].id };
+                    const fieldType = await dynamicSchemaService.getType(projectId, field.type);
+                    return contentService.get(projectId, fieldType, filter, true, context.method, context.userId);
+                };
+            }
+        });
+
+        resolvers.Mutation['create' + type.name] = (obj: any, args: any, context: any, info: any) => {
             if (context.readOnly) {
                 return null;
             }
             if (!canContinue('create', context.method, type, context.role)) {
                 return null;
             }
-            return contentService
-                .insert(
-                    projectId,
-                    type,
-                    args.input,
-                    context.method,
-                    context.userId
-                )
-                .catch(error => console.error(error));
+            return contentService.insert(projectId, type, args.input, context.method, context.userId).catch(error => console.error(error));
         };
-        resolvers.Mutation['update' + type.name] = (
-            obj: any,
-            args: any,
-            context: any,
-            info: any
-        ) => {
+        resolvers.Mutation['update' + type.name] = (obj: any, args: any, context: any, info: any) => {
             if (context.readOnly) {
                 return null;
             }
             if (!canContinue('update', context.method, type, context.role)) {
                 return null;
             }
-            return contentService
-                .update(
-                    projectId,
-                    type,
-                    args.input.id,
-                    args.input,
-                    context.method
-                )
-                .catch(error => console.error(error));
+            return contentService.update(projectId, type, args.input.id, args.input, context.method).catch(error => console.error(error));
         };
-        resolvers.Query[type.name + 's'] = (
-            obj: any,
-            args: any,
-            context: any,
-            info: any
-        ) => {
+        resolvers.Query[type.name + 's'] = (obj: any, args: any, context: any, info: any) => {
+            console.log(obj);
             if (!canContinue('readAll', context.method, type, context.role)) {
                 return null;
             }
             return contentService
-                .getAll(
+                .getAllAsConnection(
                     projectId,
                     type,
                     {
                         orderBy: args.orderBy,
                         descending: args.descending,
+                        after: args.after,
                         skip: args.skip,
                         limit: args.limit,
                         filter: args.filter,
@@ -132,12 +147,8 @@ const generateContentSchema = async (projectId: string) => {
                 )
                 .catch(error => console.error(error));
         };
-        resolvers.Query[type.name] = (
-            obj: any,
-            args: any,
-            context: any,
-            info: any
-        ) => {
+        resolvers.Query[type.name] = (obj: any, args: any, context: any, info: any) => {
+            console.log(obj);
             if (!canContinue('read', context.method, type, context.role)) {
                 return null;
             }
