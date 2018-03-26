@@ -1,4 +1,3 @@
-import * as DataLoader from 'dataloader';
 import { Filter } from '../models/filter';
 import { Type } from '../models/type';
 import { database } from '../services/database';
@@ -6,18 +5,12 @@ import { Collection } from 'mongodb';
 import { isFieldVisible } from '../util/types';
 import { Visibility } from '../models/field';
 
-interface ContentLoaderParams {
+export interface ContentLoaderParams {
     type: Type;
     filter: Filter[];
 }
 
-export function createLoaders(projectId: string, authMethod: string, userId: string, isPublic: boolean) {
-    return {
-        contentLoader: new DataLoader(params => genContent(projectId, authMethod, userId, isPublic, <ContentLoaderParams[]>params))
-    };
-}
-
-async function genContent(projectId: string, authMethod: string, userId: string, isPublicAPI: boolean, params: ContentLoaderParams[]) {
+export async function genContent(projectId: string, authMethod: string, userId: string, isPublicAPI: boolean, params: ContentLoaderParams[]) {
     const db = await database.connect();
     const values = <Collection<any>>db.collection('values');
 
@@ -29,6 +22,8 @@ async function genContent(projectId: string, authMethod: string, userId: string,
     });
 
     const aggregation = createAggregationFromQueries(queries);
+
+    console.log('DataLoader: Hitting Database', params.map(p => p.type.name));
     const result = await values.aggregate(aggregation).toArray();
 
     const filteredResult = filterResult(result, params, userId);

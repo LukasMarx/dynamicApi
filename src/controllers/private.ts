@@ -6,7 +6,7 @@ import { contentService } from '../services/contentService';
 import * as getFieldNames from 'graphql-list-fields';
 import { Response, Request, NextFunction } from 'express';
 import { agent } from 'supertest';
-import { createLoaders } from '../data-loader/content';
+import { createLoaders } from '../data-loader';
 
 export const getContent = async (req: Request, res: Response) => {
     const user = req.user;

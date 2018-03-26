@@ -7,8 +7,8 @@ import { makeExecutableSchema } from 'graphql-tools';
 import { Type } from '../models/type';
 import { Response, Request, NextFunction, Router } from 'express';
 import { dynamicJWT } from '../passport/dynamicJwt';
-import { createLoaders } from '../data-loader/content';
 import { auth } from 'google-auth-library';
+import { createLoaders } from '../data-loader';
 
 export const publicApi = Router();
 
@@ -63,7 +63,7 @@ const generateContentSchema = async (projectId: string) => {
 
             if (field.list) {
                 resolvers[type.name][field.name] = async (obj: any, args: any, context: any, info: any) => {
-                    const fieldType = await dynamicSchemaService.getType(projectId, field.type);
+                    const fieldType = await context.typeLoader.load(field.type);
                     const filter = { field: ['_refs'], value: { type: type.name, field: field.name, id: obj.id } };
                     if (args.filter) {
                         args.filter.push(filter);
@@ -87,7 +87,7 @@ const generateContentSchema = async (projectId: string) => {
                 };
 
                 resolvers.Mutation['assign' + field.name + 'To' + type.name] = async (obj: any, args: any, context: any, info: any) => {
-                    const fieldType = await dynamicSchemaService.getType(projectId, field.type);
+                    const fieldType = await context.typeLoader.load(field.type);
                     if (args.assignments) {
                         args.assignments.forEach(assignment => {
                             contentService.assign(projectId, type, fieldType, assignment.parent, assignment.child, field.name, context.method);
@@ -96,7 +96,7 @@ const generateContentSchema = async (projectId: string) => {
                 };
 
                 resolvers.Mutation['deassign' + field.name + 'From' + type.name] = async (obj: any, args: any, context: any, info: any) => {
-                    const fieldType = await dynamicSchemaService.getType(projectId, field.type);
+                    const fieldType = await context.typeLoader.load(field.type);
                     if (args.assignments) {
                         args.assignments.forEach(assignment => {
                             contentService.deassign(projectId, type, fieldType, assignment.parent, assignment.child, field.name, context.method);
@@ -107,7 +107,7 @@ const generateContentSchema = async (projectId: string) => {
                 resolvers[type.name][field.name] = async (obj: any, args: any, context: any, info: any) => {
                     if (obj[field.name] && obj[field.name].id) {
                         const filter = [{ field: 'id', value: obj[field.name].id }];
-                        const fieldType = await dynamicSchemaService.getType(projectId, field.type);
+                        const fieldType = await context.typeLoader.load(field.type);
                         return context.contentLoader.load({ type: fieldType, filter: filter });
                     }
                 };
