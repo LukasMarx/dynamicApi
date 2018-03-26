@@ -1,20 +1,15 @@
 import { Readable } from 'stream';
-import { S3 } from 'aws-sdk';
 import { Asset } from '../models/asset';
 import * as mp from 'parse-multipart';
 import { database } from './database';
 import { Collection } from 'mongodb';
-
-const s3 = new S3();
 
 export class AssetService {
     async getAll(projectId: string): Promise<Asset[]> {
         const db = await database.connect();
         const assets = <Collection<any>>db.collection('assets.files');
 
-        let result = await assets
-            .find({ metadata: { projectId: projectId } })
-            .toArray();
+        let result = await assets.find({ metadata: { projectId: projectId } }).toArray();
 
         result = result.map(file => {
             return {
