@@ -7,6 +7,8 @@ import { makeExecutableSchema } from 'graphql-tools';
 import { Type } from '../models/type';
 import { Response, Request, NextFunction, Router } from 'express';
 import { dynamicJWT } from '../passport/dynamicJwt';
+import { createLoaders } from '../data-loader/content';
+import { auth } from 'google-auth-library';
 
 export const publicApi = Router();
 
@@ -24,7 +26,10 @@ export const getApi = async (req: Request, res: Response) => {
     } else {
         variables = req.query.variables;
     }
-    const result = await graphql(schema, req.query.query, null, authenticationInfo, variables);
+
+    const context = Object.assign(authenticationInfo, createLoaders(projectId, authenticationInfo.method, authenticationInfo.userId, true));
+
+    const result = await graphql(schema, req.query.query, null, context, variables);
     if (result) res.send(result);
 };
 
@@ -35,6 +40,8 @@ export const postApi = async (req: Request, res: Response) => {
     const body = req.body;
 
     const schema = await generateContentSchema(projectId);
+
+    const context = Object.assign(authenticationInfo, createLoaders(projectId, authenticationInfo.method, authenticationInfo.userId, true));
 
     const result = await graphql(schema, body.query, null, authenticationInfo, body.variables);
     if (result) res.send(result);
@@ -98,9 +105,11 @@ const generateContentSchema = async (projectId: string) => {
                 };
             } else {
                 resolvers[type.name][field.name] = async (obj: any, args: any, context: any, info: any) => {
-                    const filter = { id: obj[field.name].id };
-                    const fieldType = await dynamicSchemaService.getType(projectId, field.type);
-                    return contentService.get(projectId, fieldType, filter, true, context.method, context.userId);
+                    if (obj[field.name] && obj[field.name].id) {
+                        const filter = [{ field: 'id', value: obj[field.name].id }];
+                        const fieldType = await dynamicSchemaService.getType(projectId, field.type);
+                        return context.contentLoader.load({ type: fieldType, filter: filter });
+                    }
                 };
             }
         });

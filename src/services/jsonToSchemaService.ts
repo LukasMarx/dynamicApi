@@ -15,11 +15,7 @@ const typeMap: { [key: string]: string } = {
 export class JsonToSchemaService {
     async convert(tenantId: string, types: Type[]) {
         let schema = `
-    
-    interface Node {
-        id: ID!
-    }
-    
+        
     input FilterInput {
         field: String!
         value: String!
@@ -90,8 +86,8 @@ export class JsonToSchemaService {
 
         if (type.fields) {
             schema += 'type ' + type.name + ' {\n';
-            schema += 'id: String! \n';
-            schema += 'public: Boolean! \n';
+            schema += 'id: String \n';
+            schema += 'public: Boolean \n';
             for (let key in type.fields) {
                 if (key === 'id' || key === 'public') {
                     continue;

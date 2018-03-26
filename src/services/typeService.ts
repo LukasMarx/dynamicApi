@@ -4,20 +4,38 @@ import * as _ from 'lodash';
 import { database } from './database';
 import { Collection } from 'mongodb';
 
+import * as NodeCache from 'node-cache';
+
+const cache = new NodeCache();
+
 export class TypeService {
     async getAllTypes(projectId: string): Promise<Type[]> {
+        const cacheResult = <Type[]>cache.get(projectId);
+        if (cacheResult) {
+            return cacheResult;
+        }
+
         const db = await database.connect();
         const types = <Collection<Type>>db.collection('types');
 
-        const result = types.find({ projectId: projectId });
-        return await result.toArray();
+        const cursor = types.find({ projectId: projectId });
+        const result = await cursor.toArray();
+        cache.set(projectId, result);
+        return result;
     }
 
     async getType(projectId: string, name: string): Promise<Type> {
+        const cacheResult = <Type>cache.get(projectId + '_' + name);
+        if (cacheResult) {
+            return cacheResult;
+        }
+
         const db = await database.connect();
         const types = <Collection<Type>>db.collection('types');
 
-        return await types.findOne({ projectId: projectId, name: name });
+        const result = await types.findOne({ projectId: projectId, name: name });
+        cache.set(projectId + '_' + name, result);
+        return result;
     }
 
     async addType(projectId: string, type: TypeInput): Promise<TypeInput> {
@@ -41,6 +59,7 @@ export class TypeService {
         const types = <Collection<Type>>db.collection('types');
 
         const result = await types.insertOne(copy);
+        cache.del(projectId);
         return type;
     }
 
@@ -65,10 +84,9 @@ export class TypeService {
         const db = await database.connect();
         const types = <Collection<Type>>db.collection('types');
 
-        await types.updateOne(
-            { projectId: projectId, name: name },
-            { $set: copy }
-        );
+        await types.updateOne({ projectId: projectId, name: name }, { $set: copy });
+        cache.del(projectId);
+        cache.del(projectId + '_' + name);
         return type;
     }
 
@@ -77,6 +95,8 @@ export class TypeService {
         const types = <Collection<Type>>db.collection('types');
 
         await types.deleteOne({ projectId: projectId, name: name });
+        cache.del(projectId);
+        cache.del(projectId + '_' + name);
         return name;
     }
 }

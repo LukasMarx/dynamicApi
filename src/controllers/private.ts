@@ -6,13 +6,16 @@ import { contentService } from '../services/contentService';
 import * as getFieldNames from 'graphql-list-fields';
 import { Response, Request, NextFunction } from 'express';
 import { agent } from 'supertest';
+import { createLoaders } from '../data-loader/content';
 
 export const getContent = async (req: Request, res: Response) => {
     const user = req.user;
     const projectId = req.params.variables.projectId;
     const schema = await generateContentSchema(projectId);
 
-    const result = graphql(schema, req.query.query, null, { user: user });
+    const context = Object.assign({ user: user }, createLoaders(projectId, 'admin', null, false));
+
+    const result = graphql(schema, req.query.query, null, context);
 };
 
 export const postContent = async (req: Request, res: Response) => {
@@ -21,7 +24,9 @@ export const postContent = async (req: Request, res: Response) => {
     const projectId = body.variables.projectId;
     const schema = await generateContentSchema(projectId);
 
-    const result = await graphql(schema, body.query, null, { user: user }, body.variables);
+    const context = Object.assign({ user: user }, createLoaders(projectId, 'admin', null, false));
+
+    const result = await graphql(schema, body.query, null, context, body.variables);
     if (result) res.send(result);
 };
 
@@ -78,12 +83,11 @@ const generateContentSchema = async (projectId: string) => {
                 };
             } else {
                 resolvers[type.name][field.name] = async (obj: any, args: any, context: any, info: any) => {
-                    if (!obj[field.name]) {
-                        return null;
+                    if (obj[field.name] && obj[field.name].id) {
+                        const filter = [{ field: 'id', value: obj[field.name].id }];
+                        const fieldType = await dynamicSchemaService.getType(projectId, field.type);
+                        return context.contentLoader.load({ type: fieldType, filter: filter });
                     }
-                    const filter = { id: obj[field.name].id };
-                    const fieldType = await dynamicSchemaService.getType(projectId, field.type);
-                    return contentService.get(projectId, fieldType, filter, false, 'admin', context.userId);
                 };
             }
         });
