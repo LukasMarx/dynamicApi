@@ -1,16 +1,12 @@
-import * as passport from "passport";
+import * as passport from 'passport';
 import * as passportJWT from 'passport-jwt';
-import { database } from "../services/database";
-
+import { database } from '../services/database';
 
 const ExtractJwt = passportJWT.ExtractJwt;
 const JwtStrategy = passportJWT.Strategy;
 
-const jwtOptions = {jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(), secretOrKey: process.env.JWT_SECRET };
+const jwtOptions = { jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(), secretOrKey: process.env.JWT_SECRET };
 
 export const Strategy = new JwtStrategy(jwtOptions, async function(jwt_payload, next) {
-    console.log('payload received', jwt_payload);
-
-    next(null, {id: jwt_payload.sub});
-   
+    next(null, { id: jwt_payload.sub });
 });

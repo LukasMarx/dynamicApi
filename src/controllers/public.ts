@@ -133,7 +133,6 @@ const generateContentSchema = async (projectId: string) => {
             return contentService.update(projectId, type, args.input.id, args.input, context.method).catch(error => console.error(error));
         };
         resolvers.Query[type.name + 's'] = (obj: any, args: any, context: any, info: any) => {
-            console.log(obj);
             if (!canContinue('readAll', context.method, type, context.role)) {
                 return null;
             }
@@ -157,7 +156,6 @@ const generateContentSchema = async (projectId: string) => {
                 .catch(error => console.error(error));
         };
         resolvers.Query[type.name] = (obj: any, args: any, context: any, info: any) => {
-            console.log(obj);
             if (!canContinue('read', context.method, type, context.role)) {
                 return null;
             }
