@@ -54,6 +54,11 @@ export const getAsset = async (req: Request, res: Response) => {
             metadata: { projectId: projectId }
         });
 
+        readStream.on('error', function(err) {
+            console.log('An error occurred!', err);
+            throw err;
+        });
+
         let transform = sharp();
         if (format) {
             if (format == 'jpg') {
