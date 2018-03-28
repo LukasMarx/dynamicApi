@@ -56,7 +56,14 @@ export const getAsset = async (req: Request, res: Response) => {
 
         readStream.on('error', function(err) {
             console.log('An error occurred!', err);
-            throw err;
+            res.sendStatus(400);
+            return;
+        });
+
+        res.on('error', function(err) {
+            console.log('An error occurred!', err);
+            res.sendStatus(400);
+            return;
         });
 
         let transform = sharp();
