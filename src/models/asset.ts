@@ -1,6 +1,7 @@
 export class Asset {
-  projectId: string;
-  fileName: string;
-  type: string;
-  size: number;
+    id: string;
+    projectId: string;
+    fileName: string;
+    type: string;
+    size: number;
 }

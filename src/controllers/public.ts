@@ -77,13 +77,25 @@ const generateContentSchema = async (projectId: string) => {
                             after: args.after,
                             descending: args.descending,
                             limit: args.limit,
-                            fields: args.fields,
+                            fields: getFieldNames(info),
                             orderBy: args.orderBy
                         },
                         false,
                         context.method,
                         context.userId
                     );
+                    // return context.contentLoaderMany.load({
+                    //     type: fieldType,
+                    //     filter: {
+                    //         filter: args.filter ? args.filter : [filter],
+                    //         skip: args.skip,
+                    //         after: args.after,
+                    //         descending: args.descending,
+                    //         limit: args.limit,
+                    //         fields: getFieldNames(info),
+                    //         orderBy: args.orderBy
+                    //     }
+                    // });
                 };
 
                 resolvers.Mutation['assign' + field.name + 'To' + type.name] = async (obj: any, args: any, context: any, info: any) => {

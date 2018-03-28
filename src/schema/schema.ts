@@ -3,7 +3,7 @@ import { makeExecutableSchema } from 'graphql-tools';
 import { type, types, createType, updateType, removeType } from './resolvers/type';
 import { project, projects, createProject } from './resolvers/project';
 import { authKey } from './resolvers/authKey';
-import { asset, assets } from './resolvers/asset';
+import { asset, assets, deleteAsset } from './resolvers/asset';
 import {
     createAuthenticationProvider,
     updateAuthenticationProvider,
@@ -85,6 +85,7 @@ const typeDefs = `
   }
 
   type Asset {
+    id: ID!
     projectId: String!
     fileName: String!
     type: String!
@@ -144,6 +145,7 @@ const typeDefs = `
     createAuthenticationProvider(projectId: String!, authProvider: AuthenticationProviderInput!): AuthenticationProvider
     updateAuthenticationProvider(projectId: String!, id: String!, authProvider: AuthenticationProviderInput!): AuthenticationProvider
     deleteAuthenticationProvider(projectId: String!, id: String!): AuthenticationProvider
+    deleteAsset(projectId: String!, id: String!): String
   }
 `;
 
@@ -167,7 +169,8 @@ const resolvers = {
         createProject: createProject,
         createAuthenticationProvider: createAuthenticationProvider,
         updateAuthenticationProvider: updateAuthenticationProvider,
-        deleteAuthenticationProvider: deleteAuthenticationProvider
+        deleteAuthenticationProvider: deleteAuthenticationProvider,
+        deleteAsset: deleteAsset
     }
 };
 

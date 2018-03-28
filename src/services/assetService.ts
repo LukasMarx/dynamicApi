@@ -2,7 +2,7 @@ import { Readable } from 'stream';
 import { Asset } from '../models/asset';
 import * as mp from 'parse-multipart';
 import { database } from './database';
-import { Collection } from 'mongodb';
+import { Collection, ObjectID } from 'mongodb';
 
 export class AssetService {
     async getAll(projectId: string): Promise<Asset[]> {
@@ -13,6 +13,7 @@ export class AssetService {
 
         result = result.map(file => {
             return {
+                id: file._id.toString(),
                 fileName: file.filename,
                 size: file.length,
                 type: file.contentType,
@@ -32,11 +33,22 @@ export class AssetService {
             filename: id
         });
         return {
+            id: file._id.toString(),
             fileName: file.filename,
             size: file.length,
             type: file.contentType,
             projectId: file.metadata.projectId
         };
+    }
+
+    async delete(projectId: string, id: string) {
+        const gridFs = await database.gridFs();
+
+        gridFs.remove({ _id: id, root: 'assets' }, err => {
+            if (err) {
+                console.log(err);
+            }
+        });
     }
 }
 

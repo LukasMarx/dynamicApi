@@ -11,8 +11,11 @@ export class Database {
             return Promise.resolve(cachedDb);
         }
 
-        return mongo.MongoClient.connect(uri)
+        const startTime = new Date().getTime();
+        console.log('Connecting to Database');
+        return mongo.MongoClient.connect(uri, { poolSize: 10 })
             .then(async client => {
+                console.log('Connection Established! Took: ' + (new Date().getTime() - startTime) + ' ms');
                 cachedDb = client.db('dynamicApi');
                 return cachedDb;
             })

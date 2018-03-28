@@ -17,7 +17,6 @@ export class ContentService {
 
         const db = await database.connect();
         const values = <Collection<any>>db.collection('values');
-        console.log('ContentService: Hitting Database');
         await values.insert(generatedEntity);
 
         return generatedEntity;
@@ -44,7 +43,6 @@ export class ContentService {
             }
         }
 
-        console.log('ContentService: Hitting Database');
         const entities = await values
             .find(params, excluded)
             .project(excluded)
@@ -76,7 +74,6 @@ export class ContentService {
         value.id = id;
         const db = await database.connect();
         const values = <Collection<any>>db.collection('values');
-        console.log('ContentService: Hitting Database');
         values.updateOne({ projectId: projectId, id: id, type: type.name }, { $set: value });
 
         return value;
@@ -89,8 +86,8 @@ export class ContentService {
         const db = await database.connect();
         const values = <Collection<any>>db.collection('values');
         const update = {};
-        update['_refs'] = { type: parentType.name, field: fieldName, id: parentId };
-        await values.updateOne({ projectId: projectId, id: targetId, type: targetType.name }, { $addToSet: update });
+        update['_refs'] = { type: targetType.name, field: fieldName, id: targetId };
+        await values.updateOne({ projectId: projectId, id: parentId, type: parentType.name }, { $addToSet: update });
     }
 
     async deassign(projectId: string, parentType: Type, targetType: Type, parentId: string, targetId: string, fieldName: string, authMethod: string) {
@@ -141,7 +138,6 @@ export class ContentService {
             }
         }
 
-        console.log('ContentService: Hitting Database');
         const result = await values
             .find(params)
             .sort(filter.orderBy || '_id', filter.descending ? -1 : 1)
@@ -200,15 +196,15 @@ export class ContentService {
             }
         }
 
-        console.log('ContentService: Hitting Database');
         const resultArray = await values.aggregate([this.getAggregation(filter, params)]).toArray();
 
         if (!resultArray || !resultArray[0]) {
             return [];
         }
         const result = resultArray[0];
-        if (result && result.count[0]) {
+        if (result && result.count && result.count[0]) {
             result.totalCount = result.count[0].count;
+
             result.count = result.edges.length;
         }
 

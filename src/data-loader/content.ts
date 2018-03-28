@@ -14,16 +14,28 @@ export async function genContent(projectId: string, authMethod: string, userId: 
     const db = await database.connect();
     const values = <Collection<any>>db.collection('values');
 
+    const result = await runAggregation(projectId, authMethod, userId, isPublicAPI, params, values);
+
+    return result;
+}
+
+async function runFindOne(projectId: string, authMethod: string, userId: string, isPublicAPI: boolean, params: ContentLoaderParams[], values) {
+    let reqParams = createQueryParamsFromFilter(projectId, params[0].type, params[0].filter, isPublicAPI);
+    let excluded = createExcludedParams(params[0].type, authMethod);
+
+    return [values.findOne(reqParams, excluded)];
+}
+
+async function runAggregation(projectId: string, authMethod: string, userId: string, isPublicAPI: boolean, params: ContentLoaderParams[], values) {
     const queries = [];
     params.forEach(param => {
         let reqParams = createQueryParamsFromFilter(projectId, param.type, param.filter, isPublicAPI);
         let excluded = createExcludedParams(param.type, authMethod);
         queries.push(createQuery(reqParams, excluded));
     });
-
     const aggregation = createAggregationFromQueries(queries);
+    console.log(JSON.stringify(aggregation));
 
-    console.log('DataLoader: Hitting Database', params.map(p => p.type.name));
     const result = await values.aggregate(aggregation).toArray();
 
     const filteredResult = filterResult(result, params, userId);
