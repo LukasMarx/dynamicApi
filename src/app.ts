@@ -19,6 +19,7 @@ import * as auth from './controllers/auth';
 import { Strategy } from './passport/jwtStrategy';
 import { postAsset, getAsset } from './controllers/asset';
 import { getToken } from './controllers/userAuth';
+import * as RateLimit from 'express-rate-limit';
 
 // Create Express server
 export const app = express();
@@ -34,26 +35,24 @@ passport.use(Strategy);
 app.use(passport.initialize());
 app.use(lusca.xframe('SAMEORIGIN'));
 app.use(lusca.xssProtection(true));
+app.disable('x-powered-by');
+
+const rateLimiter = new RateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    delayMs: 0
+});
+
 app.use(cors());
 
-app.use(
-    express.static(path.join(__dirname, 'public'), { maxAge: 31557600000 })
-);
+app.use(express.static(path.join(__dirname, 'public'), { maxAge: 31557600000 }));
 
 /**
  * Primary app routes.
  */
-app.get(
-    '/admin/api',
-    passport.authenticate('jwt', { session: false }),
-    adminApi.getAdmin
-);
-app.post(
-    '/admin/api',
-    passport.authenticate('jwt', { session: false }),
-    adminApi.postAdmin
-);
-app.post('/auth/token', auth.adminToken);
+app.get('/admin/api', passport.authenticate('jwt', { session: false }), adminApi.getAdmin);
+app.post('/admin/api', passport.authenticate('jwt', { session: false }), adminApi.postAdmin);
+app.post('/auth/token', rateLimiter, auth.adminToken);
 
 app.get('/admin/content', privateApi.getContent);
 app.post('/admin/content', privateApi.postContent);
