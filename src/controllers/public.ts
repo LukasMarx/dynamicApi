@@ -64,38 +64,22 @@ const generateContentSchema = async (projectId: string) => {
             if (field.list) {
                 resolvers[type.name][field.name] = async (obj: any, args: any, context: any, info: any) => {
                     const fieldType = await context.typeLoader.load(field.type);
-                    const filter = { field: ['_refs'], value: { type: type.name, field: field.name, id: obj.id } };
-                    if (args.filter) {
-                        args.filter.push(filter);
+                    if (obj['_refs_' + fieldType.name + '_' + field.name]) {
+                        const ids = obj['_refs_' + fieldType.name + '_' + field.name].map(m => {
+                            return { type: fieldType, filter: [{ field: 'id', value: m }] };
+                        });
+                        const result = await context.contentLoader.loadMany(ids);
+                        const e = {
+                            edges: result.map(f => {
+                                return {
+                                    cursor: f._id.toString('base64'),
+                                    node: f
+                                };
+                            }),
+                            nodes: result
+                        };
+                        return e;
                     }
-                    return contentService.getAllAsConnection(
-                        projectId,
-                        fieldType,
-                        {
-                            filter: args.filter ? args.filter : [filter],
-                            skip: args.skip,
-                            after: args.after,
-                            descending: args.descending,
-                            limit: args.limit,
-                            fields: getFieldNames(info),
-                            orderBy: args.orderBy
-                        },
-                        false,
-                        context.method,
-                        context.userId
-                    );
-                    // return context.contentLoaderMany.load({
-                    //     type: fieldType,
-                    //     filter: {
-                    //         filter: args.filter ? args.filter : [filter],
-                    //         skip: args.skip,
-                    //         after: args.after,
-                    //         descending: args.descending,
-                    //         limit: args.limit,
-                    //         fields: getFieldNames(info),
-                    //         orderBy: args.orderBy
-                    //     }
-                    // });
                 };
 
                 resolvers.Mutation['assign' + field.name + 'To' + type.name] = async (obj: any, args: any, context: any, info: any) => {
@@ -148,24 +132,22 @@ const generateContentSchema = async (projectId: string) => {
             if (!canContinue('readAll', context.method, type, context.role)) {
                 return null;
             }
-            return contentService
-                .getAllAsConnection(
-                    projectId,
-                    type,
-                    {
-                        orderBy: args.orderBy,
-                        descending: args.descending,
-                        after: args.after,
-                        skip: args.skip,
-                        limit: args.limit,
-                        filter: args.filter,
-                        fields: getFieldNames(info)
-                    },
-                    true,
-                    context.method,
-                    context.userId
-                )
-                .catch(error => console.error(error));
+            return contentService.getAllAsConnection(
+                projectId,
+                type,
+                {
+                    filter: args.filter,
+                    skip: args.skip,
+                    after: args.after,
+                    descending: args.descending,
+                    limit: args.limit,
+                    fields: args.fields,
+                    orderBy: args.orderBy
+                },
+                true,
+                context.method,
+                context.userId
+            );
         };
         resolvers.Query[type.name] = (obj: any, args: any, context: any, info: any) => {
             if (!canContinue('read', context.method, type, context.role)) {

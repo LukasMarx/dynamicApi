@@ -50,7 +50,8 @@
         "parse-multipart": "^1.0.4",
         "passport": "^0.4.0",
         "passport-jwt": "^3.0.1",
-        "sharp": "^0.19.0"
+        "sharp": "^0.19.0",
+        "sift": "^5.1.0"
     },
     "devDependencies": {
         "@types/async": "^2.0.45",

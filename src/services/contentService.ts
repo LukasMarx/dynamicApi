@@ -86,7 +86,7 @@ export class ContentService {
         const db = await database.connect();
         const values = <Collection<any>>db.collection('values');
         const update = {};
-        update['_refs'] = { type: targetType.name, field: fieldName, id: targetId };
+        update['_refs_' + targetType.name + '_' + fieldName] = targetId;
         await values.updateOne({ projectId: projectId, id: parentId, type: parentType.name }, { $addToSet: update });
     }
 
@@ -195,29 +195,24 @@ export class ContentService {
                 excluded[key] = 0;
             }
         }
-
-        const resultArray = await values.aggregate([this.getAggregation(filter, params)]).toArray();
-
-        if (!resultArray || !resultArray[0]) {
-            return [];
-        }
-        const result = resultArray[0];
-        if (result && result.count && result.count[0]) {
-            result.totalCount = result.count[0].count;
-
-            result.count = result.edges.length;
-        }
+        console.log('ContentService: Hitting Database');
+        //const resultArray = await values.aggregate([this.getAggregation(filter, params)]).toArray();
+        const temp = await Promise.all([values.find(params).toArray(), values.count(params)]);
+        const contentResult = temp[0];
+        const count = temp[1];
 
         let hasNextPage = false;
         if (filter.limit) {
-            if (result.edges.length === filter.limit + 1) {
+            if (contentResult.length === filter.limit + 1) {
                 hasNextPage = true;
-                result.edges.pop();
+                contentResult.pop();
             }
         }
 
-        result.nodes = result.edges;
-        result.edges = result.edges.map(edge => {
+        const result = <any>{};
+        result.totalCount = count;
+        result.nodes = contentResult;
+        result.edges = contentResult.map(edge => {
             return {
                 cursor: edge._id.toString('base64'),
                 node: edge

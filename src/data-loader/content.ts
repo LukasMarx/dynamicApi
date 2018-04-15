@@ -4,6 +4,7 @@ import { database } from '../services/database';
 import { Collection } from 'mongodb';
 import { isFieldVisible } from '../util/types';
 import { Visibility } from '../models/field';
+import * as sift from 'sift';
 
 export interface ContentLoaderParams {
     type: Type;
@@ -14,14 +15,30 @@ export async function genContent(projectId: string, authMethod: string, userId: 
     const db = await database.connect();
     const values = <Collection<any>>db.collection('values');
 
-    const result = await runAggregation(projectId, authMethod, userId, isPublicAPI, params, values);
+    //const result = await runAggregation(projectId, authMethod, userId, isPublicAPI, params, values);
+    const queries = params.map(x => {
+        const query = { type: x.type.name };
+        if (x.filter) {
+            x.filter.forEach(f => {
+                query[f.field] = f.value;
+            });
+        }
+        return query;
+    });
 
+    const result = await values.find({ projectId: projectId, $or: queries }).toArray();
+
+    //const s: any = sift;
+    // return queries.map(query => {
+    //     return s(query, result);
+    // });
     return result;
 }
 
 async function runFindOne(projectId: string, authMethod: string, userId: string, isPublicAPI: boolean, params: ContentLoaderParams[], values) {
     let reqParams = createQueryParamsFromFilter(projectId, params[0].type, params[0].filter, isPublicAPI);
     let excluded = createExcludedParams(params[0].type, authMethod);
+    console.log(reqParams);
 
     return [values.findOne(reqParams, excluded)];
 }
@@ -67,7 +84,7 @@ function createExcludedParams(type: Type, authMethod: string) {
 }
 
 function createQuery(params, excluded) {
-    return [{ $match: params }, { $project: excluded }, { $limit: 1 }];
+    return [{ $match: params }, { $limit: 1 }];
 }
 
 function createAggregationFromQueries(queries: any[]) {
