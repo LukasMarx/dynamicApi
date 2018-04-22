@@ -202,6 +202,12 @@ export class ContentService {
             val[filter.orderBy] = filter.descending ? -1 : 1;
             cursor = cursor.sort(val);
         }
+        if (filter.skip) {
+            cursor = cursor.skip(filter.skip);
+        }
+        if (filter.limit) {
+            cursor = cursor.limit(filter.limit);
+        }
 
         // const resultArray = await values.aggregate([this.getAggregation(filter, params)]).toArray();
         const results = await Promise.all([cursor.toArray(), values.count(params)]);
