@@ -86,8 +86,8 @@ export class ContentService {
         const db = await database.connect();
         const values = <Collection<any>>db.collection('values');
         const update = {};
-        update['_refs_' + targetType.name + '_' + fieldName] = targetId;
-        await values.updateOne({ projectId: projectId, id: parentId, type: parentType.name }, { $addToSet: update });
+        update['_refs'] = { type: parentType.name, field: fieldName, id: parentId };
+        await values.updateOne({ projectId: projectId, id: targetId, type: targetType.name }, { $addToSet: update });
     }
 
     async deassign(projectId: string, parentType: Type, targetType: Type, parentId: string, targetId: string, fieldName: string, authMethod: string) {
@@ -195,29 +195,24 @@ export class ContentService {
                 excluded[key] = 0;
             }
         }
-        console.log('ContentService: Hitting Database');
-        //const resultArray = await values.aggregate([this.getAggregation(filter, params)]).toArray();
-        const temp = await Promise.all([values.find(params).toArray(), values.count(params)]);
-        const contentResult = temp[0];
-        const count = temp[1];
+
+        // const resultArray = await values.aggregate([this.getAggregation(filter, params)]).toArray();
+        const results = await Promise.all([values.find(params).toArray(), values.count(params)]);
+        const result = { edges: results[0], totalCount: results[1], nodes: null, pageInfo: null };
+
+        // if (!resultArray || !resultArray[0]) {
+        //     return [];
+        // }
+        // const result = resultArray[0];
 
         let hasNextPage = false;
-        if (filter.limit) {
-            if (contentResult.length === filter.limit + 1) {
-                hasNextPage = true;
-                contentResult.pop();
-            }
-        }
+        // if (filter.limit) {
+        //     if (contentResult.length === filter.limit + 1) {
+        //         hasNextPage = true;
+        //         contentResult.pop();
+        //     }
+        // }
 
-        const result = <any>{};
-        result.totalCount = count;
-        result.nodes = contentResult;
-        result.edges = contentResult.map(edge => {
-            return {
-                cursor: edge._id.toString('base64'),
-                node: edge
-            };
-        });
         if (result.edges.length > 0) {
             result.pageInfo = {
                 startCursor: result.edges[0].cursor,

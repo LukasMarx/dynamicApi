@@ -15,7 +15,6 @@ export async function genContent(projectId: string, authMethod: string, userId: 
     const db = await database.connect();
     const values = <Collection<any>>db.collection('values');
 
-    //const result = await runAggregation(projectId, authMethod, userId, isPublicAPI, params, values);
     const queries = params.map(x => {
         const query = { type: x.type.name };
         if (x.filter) {
@@ -27,11 +26,6 @@ export async function genContent(projectId: string, authMethod: string, userId: 
     });
 
     const result = await values.find({ projectId: projectId, $or: queries }).toArray();
-
-    //const s: any = sift;
-    // return queries.map(query => {
-    //     return s(query, result);
-    // });
     return result;
 }
 
