@@ -196,8 +196,15 @@ export class ContentService {
             }
         }
 
+        let cursor = values.find(params);
+        if (filter.orderBy) {
+            const val = {};
+            val[filter.orderBy] = filter.descending ? 1 : -1;
+            cursor = cursor.sort(val);
+        }
+
         // const resultArray = await values.aggregate([this.getAggregation(filter, params)]).toArray();
-        const results = await Promise.all([values.find(params).toArray(), values.count(params)]);
+        const results = await Promise.all([cursor.toArray(), values.count(params)]);
         const result = { edges: results[0], totalCount: results[1], nodes: null, pageInfo: null };
 
         // if (!resultArray || !resultArray[0]) {
@@ -206,12 +213,12 @@ export class ContentService {
         // const result = resultArray[0];
 
         let hasNextPage = false;
-        if (filter.limit) {
-            if (result.edges.length === filter.limit + 1) {
-                hasNextPage = true;
-                result.edges.pop();
-            }
-        }
+        // if (filter.limit) {
+        //     if (result.edges.length === filter.limit + 1) {
+        //         hasNextPage = true;
+        //         result.edges.pop();
+        //     }
+        // }
 
         result.nodes = result.edges;
         result.edges = result.edges.map(edge => {
@@ -220,19 +227,19 @@ export class ContentService {
                 node: edge
             };
         });
-        if (result.edges.length > 0) {
-            result.pageInfo = {
-                startCursor: result.edges[0].cursor,
-                endCursor: result.edges[result.edges.length - 1].cursor,
-                hasNextPage: hasNextPage
-            };
-        } else {
-            result.pageInfo = {
-                startCursor: null,
-                endCursor: null,
-                hasNextPage: false
-            };
-        }
+        // if (result.edges.length > 0) {
+        //     result.pageInfo = {
+        //         startCursor: result.edges[0].cursor,
+        //         endCursor: result.edges[result.edges.length - 1].cursor,
+        //         hasNextPage: hasNextPage
+        //     };
+        // } else {
+        //     result.pageInfo = {
+        //         startCursor: null,
+        //         endCursor: null,
+        //         hasNextPage: false
+        //     };
+        // }
 
         // if (result.length > 0) {
         //     result.forEach(entity => {
