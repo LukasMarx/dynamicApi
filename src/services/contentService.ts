@@ -86,8 +86,8 @@ export class ContentService {
         const db = await database.connect();
         const values = <Collection<any>>db.collection('values');
         const update = {};
-        update['_refs'] = { type: targetType.name, field: fieldName, id: targetId };
-        await values.updateOne({ projectId: projectId, id: parentId, type: parentType.name }, { $addToSet: update });
+        update['_refs'] = { type: parentType.name, field: fieldName, id: parentId };
+        await values.updateOne({ projectId: projectId, id: targetId, type: targetType.name }, { $addToSet: update });
     }
 
     async deassign(projectId: string, parentType: Type, targetType: Type, parentId: string, targetId: string, fieldName: string, authMethod: string) {
@@ -196,17 +196,14 @@ export class ContentService {
             }
         }
 
-        const resultArray = await values.aggregate([this.getAggregation(filter, params)]).toArray();
+        // const resultArray = await values.aggregate([this.getAggregation(filter, params)]).toArray();
+        const results = await Promise.all([values.find(params).toArray(), values.count(params)]);
+        const result = { edges: results[0], totalCount: results[1], nodes: null, pageInfo: null };
 
-        if (!resultArray || !resultArray[0]) {
-            return [];
-        }
-        const result = resultArray[0];
-        if (result && result.count && result.count[0]) {
-            result.totalCount = result.count[0].count;
-
-            result.count = result.edges.length;
-        }
+        // if (!resultArray || !resultArray[0]) {
+        //     return [];
+        // }
+        // const result = resultArray[0];
 
         let hasNextPage = false;
         if (filter.limit) {
