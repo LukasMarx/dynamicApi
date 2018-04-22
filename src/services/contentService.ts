@@ -199,7 +199,7 @@ export class ContentService {
         let cursor = values.find(params);
         if (filter.orderBy) {
             const val = {};
-            val[filter.orderBy] = filter.descending ? 1 : -1;
+            val[filter.orderBy] = filter.descending ? -1 : 1;
             cursor = cursor.sort(val);
         }
 
