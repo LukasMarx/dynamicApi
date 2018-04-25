@@ -88,6 +88,8 @@ export class JsonToSchemaService {
             schema += 'type ' + type.name + ' {\n';
             schema += 'id: String \n';
             schema += 'public: Boolean \n';
+            schema += '_lastUpdated: String \n';
+            schema += '_creationDate: String \n';
             for (let key in type.fields) {
                 if (key === 'id' || key === 'public') {
                     continue;

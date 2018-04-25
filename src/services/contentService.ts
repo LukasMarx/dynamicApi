@@ -72,6 +72,8 @@ export class ContentService {
         value.type = type.name;
         value.projectId = projectId;
         value.id = id;
+
+        value._lastUpdated = new Date().toISOString();
         const db = await database.connect();
         const values = <Collection<any>>db.collection('values');
         values.updateOne({ projectId: projectId, id: id, type: type.name }, { $set: value });
@@ -370,6 +372,11 @@ export class ContentService {
         generatedEntity.type = type.name;
         generatedEntity.projectId = projectId;
         generatedEntity.id = v4();
+
+        const now = new Date().toISOString();
+        generatedEntity._creationDate = now;
+        generatedEntity._lastUpdated = now;
+
         if (userId) {
             generatedEntity._owner = userId;
         }
