@@ -97,7 +97,7 @@ const generateContentSchema = async (projectId: string) => {
         };
 
         resolvers.Mutation['update' + type.name] = (obj: any, args: any, context: any, info: any) => {
-            return contentService.update(args.projectId, type, args.input.id, args.input, 'admin').catch(error => console.error(error));
+            return contentService.update(args.projectId, type, args.input.id, args.input, 'admin', null).catch(error => console.error(error));
         };
 
         resolvers.Query[type.name + 's'] = (obj: any, args: any, context: any, info: any) => {

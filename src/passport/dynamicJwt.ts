@@ -4,19 +4,12 @@ import { Collection } from 'mongodb';
 import { ProjectKeys } from '../models/projectKeys';
 import * as jwt from 'jsonwebtoken';
 
-export const dynamicJWT = async function(
-    req: Request,
-    res: Response,
-    next: NextFunction
-) {
+export const dynamicJWT = async function(req: Request, res: Response, next: NextFunction) {
     if (<string>req.headers['authorization'] == null) {
         req.authInfo = { method: 'anonymous' };
         return next();
     }
-    const token = (<string>req.headers['authorization']).replace(
-        /Bearer /g,
-        ''
-    );
+    const token = (<string>req.headers['authorization']).replace(/Bearer /g, '');
 
     const config = {
         audience: process.env.TOKEN_AUDIENCE,
@@ -60,7 +53,11 @@ export const dynamicJWT = async function(
                 role: verified.role,
                 projectId: verified.projectId,
                 readOnly: verified.readOnly,
-                userId: verified.sub
+                user: {
+                    id: verified.id,
+                    type: verified.type,
+                    cloudProvider: verified.cloudProvider
+                }
             };
             return next();
         }

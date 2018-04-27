@@ -19,21 +19,11 @@ export const getToken = async (req: Request, res: Response) => {
             return res.sendStatus(400);
         }
 
-        const provider = await authenticationProviderService.getAuthenticationProvider(
-            projectId,
-            providerId
-        );
+        const provider = await authenticationProviderService.getAuthenticationProvider(projectId, providerId);
 
-        const validationResult = await validateWithProvider(
-            provider.cloudProvider.toString(),
-            provider.clientId,
-            token
-        );
+        const validationResult = await validateWithProvider(provider.cloudProvider.toString(), provider.clientId, token);
 
-        const targetType = await dynamicSchemaService.getType(
-            projectId,
-            provider.targetType
-        );
+        const targetType = await dynamicSchemaService.getType(projectId, provider.targetType);
 
         const mappings = provider.mappings[0];
         let filter = { projectId: projectId, type: targetType.name };
@@ -50,18 +40,12 @@ export const getToken = async (req: Request, res: Response) => {
         result[mappings.cloudProvider] = validationResult.cloudProvider;
 
         if (!user) {
-            await contentService.insert(
-                projectId,
-                targetType,
-                result,
-                'admin',
-                validationResult.userId
-            );
+            await contentService.insert(projectId, targetType, result, 'admin', validationResult.userId);
         }
 
         result['projectId'] = projectId;
         result['type'] = provider.targetType;
-        result['method'] = 'userToken';
+        result['method'] = 'user';
 
         const jwtToken = await generateToken(projectId, result);
         res.json({ token: jwtToken });
@@ -70,11 +54,7 @@ export const getToken = async (req: Request, res: Response) => {
     }
 };
 
-async function validateWithProvider(
-    cloudProvider: string,
-    clientId: string,
-    token: any
-) {
+async function validateWithProvider(cloudProvider: string, clientId: string, token: any) {
     switch (cloudProvider) {
         case 'GOOGLE': {
             return validateWithGoogle(clientId, token);

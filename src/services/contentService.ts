@@ -6,14 +6,14 @@ import { Field, Visibility } from '../models/field';
 import { isFieldVisible } from '../util/types';
 
 export class ContentService {
-    async insert(projectId: string, type: Type, value: any, authMethod: string, userId: string) {
+    async insert(projectId: string, type: Type, value: any, authMethod: string, user: any) {
         for (let key in type.fields) {
             if (!isFieldVisible(type.fields[key], authMethod)) {
                 throw new Error("You don't have access to the field " + key);
             }
         }
 
-        const generatedEntity = this.generateEntity(projectId, type, value, userId);
+        const generatedEntity = this.generateEntity(projectId, type, value, user);
 
         const db = await database.connect();
         const values = <Collection<any>>db.collection('values');
@@ -22,7 +22,7 @@ export class ContentService {
         return generatedEntity;
     }
 
-    async get(projectId: string, type: Type, filter: any, isPublic: boolean = true, authMethod: string, userId: string) {
+    async get(projectId: string, type: Type, filter: any, isPublic: boolean = true, authMethod: string, user: any) {
         const db = await database.connect();
         const values = <Collection<any>>db.collection('values');
         const params: any = { projectId: projectId, type: type.name };
@@ -51,7 +51,7 @@ export class ContentService {
         if (entities.length > 0) {
             const entity = entities[0];
             for (let key in type.fields) {
-                if (type.fields[key].visibility == Visibility.OWNER && entity._owner !== userId) {
+                if (type.fields[key].visibility == Visibility.OWNER && entity._author !== user.id) {
                     entity[key] = null;
                 }
             }
@@ -60,7 +60,7 @@ export class ContentService {
         return null;
     }
 
-    async update(projectId: string, type: Type, id: string, value: any, authMethod: string) {
+    async update(projectId: string, type: Type, id: string, value: any, authMethod: string, user: any) {
         for (let key in type.fields) {
             if (!isFieldVisible(type.fields[key], authMethod)) {
                 throw new Error("You don't have access to the field " + key);
@@ -74,11 +74,49 @@ export class ContentService {
         value.id = id;
 
         value._lastUpdated = new Date().toISOString();
+
         const db = await database.connect();
         const values = <Collection<any>>db.collection('values');
-        values.updateOne({ projectId: projectId, id: id, type: type.name }, { $set: value });
 
-        return value;
+        const params = { projectId: projectId, id: id, type: type.name };
+        if (type.permissions.user && type.permissions.user.update) {
+            const result = await values.updateOne(params, { $set: value });
+            if (result.matchedCount === 0) {
+                return new Error('Unauthorized Access');
+            }
+            return value;
+        } else if (type.permissions.author && type.permissions.author.update) {
+            params['_author'] = user;
+            const result = await values.updateOne(params, { $set: value });
+            if (result.matchedCount === 0) {
+                return new Error('Unauthorized Access');
+            }
+            return value;
+        }
+        return new Error('Unauthorized Access');
+    }
+
+    async delete(projectId: string, type: Type, id: string, authMethod: string, user: any) {
+        const db = await database.connect();
+        const values = <Collection<any>>db.collection('values');
+
+        const params = { projectId: projectId, id: id, type: type.name };
+        if (type.permissions.user && type.permissions.user.update) {
+            values.deleteOne(params);
+            const result = await values.deleteOne(params);
+            if (result.deletedCount === 0) {
+                return new Error('Unauthorized Access');
+            }
+            return null;
+        } else if (type.permissions.author && type.permissions.author.update) {
+            params['_author'] = user;
+            const result = await values.deleteOne(params);
+            if (result.deletedCount === 0) {
+                return new Error('Unauthorized Access');
+            }
+            return null;
+        }
+        return new Error('Unauthorized Access');
     }
 
     async assign(projectId: string, parentType: Type, targetType: Type, parentId: string, targetId: string, fieldName: string, authMethod: string) {
@@ -90,6 +128,20 @@ export class ContentService {
         const update = {};
         update['_refs'] = { type: parentType.name, field: fieldName, id: parentId };
         await values.updateOne({ projectId: projectId, id: targetId, type: targetType.name }, { $addToSet: update });
+    }
+
+    async insertAndAssign(
+        projectId: string,
+        parentType: Type,
+        parentId: string,
+        targetType: Type,
+        targetInput: any,
+        fieldName: string,
+        authMethod: string,
+        user: any
+    ) {
+        const insert = await this.insert(projectId, targetType, targetInput, authMethod, user);
+        return await this.assign(projectId, parentType, targetType, parentId, insert.id, fieldName, authMethod);
     }
 
     async deassign(projectId: string, parentType: Type, targetType: Type, parentId: string, targetId: string, fieldName: string, authMethod: string) {
@@ -151,7 +203,7 @@ export class ContentService {
         if (result.length > 0) {
             result.forEach(entity => {
                 for (let key in type.fields) {
-                    if (type.fields[key].visibility == Visibility.OWNER && entity._owner !== userId) {
+                    if (type.fields[key].visibility == Visibility.OWNER && entity._author !== userId) {
                         entity[key] = null;
                     }
                 }
@@ -378,7 +430,7 @@ export class ContentService {
         generatedEntity._lastUpdated = now;
 
         if (userId) {
-            generatedEntity._owner = userId;
+            generatedEntity._author = userId;
         }
 
         for (let key in type.fields) {

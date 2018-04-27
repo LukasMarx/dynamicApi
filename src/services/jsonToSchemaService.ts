@@ -1,6 +1,7 @@
 import { schema } from './../schema/schema';
 import { Type } from '../models/type';
 import { Field } from '../models/field';
+import { authenticationProviderService } from './authenticationProviderService';
 
 const typeMap: { [key: string]: string } = {
     INTEGER: 'Int',
@@ -13,7 +14,7 @@ const typeMap: { [key: string]: string } = {
 };
 
 export class JsonToSchemaService {
-    async convert(tenantId: string, types: Type[]) {
+    async convert(projectId: string, types: Type[]) {
         let schema = `
         
     input FilterInput {
@@ -35,6 +36,9 @@ export class JsonToSchemaService {
     }
       `;
 
+        const authProvider = await authenticationProviderService.getAllAuthenticationProviders(projectId);
+        const union = authProvider.map(ap => ap.targetType).join(' | ');
+        schema += 'union _Author = ' + union + '\n';
         for (let type of types) {
             schema += this.generateTypeString(type);
             schema += this.generateTypeInputString(type);
@@ -45,7 +49,7 @@ export class JsonToSchemaService {
         return schema;
     }
 
-    async convertAdmin(tenantId: string, types: Type[]) {
+    async convertAdmin(projectId: string, types: Type[]) {
         let schema = `
         input ExternalInput {
             id: String!
@@ -90,6 +94,7 @@ export class JsonToSchemaService {
             schema += 'public: Boolean \n';
             schema += '_lastUpdated: String \n';
             schema += '_creationDate: String \n';
+            schema += '_author: _Author \n';
             for (let key in type.fields) {
                 if (key === 'id' || key === 'public') {
                     continue;
@@ -214,9 +219,22 @@ export class JsonToSchemaService {
         let schema = 'type Mutation {\n';
         for (let type of types) {
             schema += 'create' + type.name + '(input: ' + type.name + 'Input): ' + type.name + '\n';
-            schema += 'update' + type.name + '(input: ' + type.name + 'Input): ' + type.name + '\n';
+            schema += 'update' + type.name + '(id: String!, input: ' + type.name + 'Input): ' + type.name + '\n';
+            schema += 'delete' + type.name + '(id: String!): ' + type.name + '\n';
             this.getAllCustomTypedFields(type).forEach(field => {
                 schema += 'assign' + field.name + 'To' + type.name + '(assignments: [Assignment]): ' + type.name + '\n';
+                schema +=
+                    'insert' +
+                    field.type +
+                    'AndAssign' +
+                    field.name +
+                    'To' +
+                    type.name +
+                    '(input: ' +
+                    field.type +
+                    'Input!, assignToId: String!): ' +
+                    field.type +
+                    '\n';
                 schema += 'deassign' + field.name + 'From' + type.name + '(assignments: [Assignment]): ' + type.name + '\n';
             });
         }

@@ -36,23 +36,13 @@ app.use(lusca.xframe('SAMEORIGIN'));
 app.use(lusca.xssProtection(true));
 app.use(cors());
 
-app.use(
-    express.static(path.join(__dirname, 'public'), { maxAge: 31557600000 })
-);
+app.use(express.static(path.join(__dirname, 'public'), { maxAge: 31557600000 }));
 
 /**
  * Primary app routes.
  */
-app.get(
-    '/admin/api',
-    passport.authenticate('jwt', { session: false }),
-    adminApi.getAdmin
-);
-app.post(
-    '/admin/api',
-    passport.authenticate('jwt', { session: false }),
-    adminApi.postAdmin
-);
+app.get('/admin/api', passport.authenticate('jwt', { session: false }), adminApi.getAdmin);
+app.post('/admin/api', passport.authenticate('jwt', { session: false }), adminApi.postAdmin);
 app.post('/auth/token', auth.adminToken);
 
 app.get('/admin/content', privateApi.getContent);

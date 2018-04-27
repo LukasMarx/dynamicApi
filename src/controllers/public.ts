@@ -82,20 +82,8 @@ const generateContentSchema = async (projectId: string) => {
                         },
                         false,
                         context.method,
-                        context.userId
+                        context.user
                     );
-                    // return context.contentLoaderMany.load({
-                    //     type: fieldType,
-                    //     filter: {
-                    //         filter: args.filter ? args.filter : [filter],
-                    //         skip: args.skip,
-                    //         after: args.after,
-                    //         descending: args.descending,
-                    //         limit: args.limit,
-                    //         fields: getFieldNames(info),
-                    //         orderBy: args.orderBy
-                    //     }
-                    // });
                 };
 
                 resolvers.Mutation['assign' + field.name + 'To' + type.name] = async (obj: any, args: any, context: any, info: any) => {
@@ -105,6 +93,17 @@ const generateContentSchema = async (projectId: string) => {
                             contentService.assign(projectId, type, fieldType, assignment.parent, assignment.child, field.name, context.method);
                         });
                     }
+                };
+
+                resolvers.Mutation['insert' + field.type + 'AndAssign' + field.name + 'To' + type.name] = async (
+                    obj: any,
+                    args: any,
+                    context: any,
+                    info: any
+                ) => {
+                    const fieldType = await context.typeLoader.load(field.type);
+
+                    contentService.insertAndAssign(projectId, type, args.assignToId, fieldType, args.input, field.name, context.method, context.user);
                 };
 
                 resolvers.Mutation['deassign' + field.name + 'From' + type.name] = async (obj: any, args: any, context: any, info: any) => {
@@ -124,29 +123,52 @@ const generateContentSchema = async (projectId: string) => {
                     }
                 };
             }
+            resolvers[type.name]['_author'] = async (obj: any, args: any, context: any, info: any) => {
+                if (obj['_author'] && obj['_author'].id) {
+                    const filter = [{ field: 'id', value: obj['_author'].id }];
+                    const fieldType = await context.typeLoader.load(obj['_author'].type);
+                    const result = await context.contentLoader.load({ type: fieldType, filter: filter });
+                    return result ? result : null;
+                }
+                return null;
+            };
         });
 
+        resolvers['_Author'] = {
+            __resolveType(obj, context, info) {
+                return type.name;
+            }
+        };
         resolvers.Mutation['create' + type.name] = (obj: any, args: any, context: any, info: any) => {
             if (context.readOnly) {
-                return null;
+                return new Error('Unauthorized Access');
             }
             if (!canContinue('create', context.method, type, context.role)) {
-                return null;
+                return new Error('Unauthorized Access');
             }
-            return contentService.insert(projectId, type, args.input, context.method, context.userId).catch(error => console.error(error));
+            return contentService.insert(projectId, type, args.input, context.method, context.user).catch(error => console.error(error));
         };
         resolvers.Mutation['update' + type.name] = (obj: any, args: any, context: any, info: any) => {
             if (context.readOnly) {
-                return null;
+                return new Error('Unauthorized Access');
             }
             if (!canContinue('update', context.method, type, context.role)) {
-                return null;
+                return new Error('Unauthorized Access');
             }
-            return contentService.update(projectId, type, args.input.id, args.input, context.method).catch(error => console.error(error));
+            return contentService.update(projectId, type, args.id, args.input, context.method, context.user).catch(error => console.error(error));
+        };
+        resolvers.Mutation['delete' + type.name] = (obj: any, args: any, context: any, info: any) => {
+            if (context.readOnly) {
+                return new Error('Unauthorized Access');
+            }
+            if (!canContinue('delete', context.method, type, context.role)) {
+                return new Error('Unauthorized Access');
+            }
+            return contentService.delete(projectId, type, args.id, context.method, context.user).catch(error => console.error(error));
         };
         resolvers.Query[type.name + 's'] = (obj: any, args: any, context: any, info: any) => {
             if (!canContinue('readAll', context.method, type, context.role)) {
-                return null;
+                return new Error('Unauthorized Access');
             }
             return contentService
                 .getAllAsConnection(
@@ -169,7 +191,7 @@ const generateContentSchema = async (projectId: string) => {
         };
         resolvers.Query[type.name] = (obj: any, args: any, context: any, info: any) => {
             if (!canContinue('read', context.method, type, context.role)) {
-                return null;
+                return new Error('Unauthorized Access');
             }
             return contentService
                 .get(
@@ -181,7 +203,7 @@ const generateContentSchema = async (projectId: string) => {
                     },
                     true,
                     context.method,
-                    context.userId
+                    context.user
                 )
                 .catch(error => console.error(error));
         };
@@ -205,7 +227,7 @@ function canContinue(crud: string, method: string, type: Type, role?: string) {
             break;
         }
         case 'user': {
-            if (type.permissions.perRole[role][crud]) {
+            if ((type.permissions.user && type.permissions.user[crud]) || (type.permissions.author && type.permissions.author[crud])) {
                 return true;
             }
             break;
