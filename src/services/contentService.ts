@@ -79,10 +79,10 @@ export class ContentService {
         const values = <Collection<any>>db.collection('values');
 
         const params = { projectId: projectId, id: id, type: type.name };
-        if (type.permissions.user && type.permissions.user.update) {
+        if ((type.permissions.user && type.permissions.user.update) || authMethod === 'admin') {
             const result = await values.updateOne(params, { $set: value });
             if (result.matchedCount === 0) {
-                return new Error('Unauthorized Access');
+                return new Error('NotFound');
             }
             return value;
         } else if (type.permissions.author && type.permissions.author.update) {
