@@ -70,6 +70,10 @@ export class JsonToSchemaService {
         }
         `;
 
+        const authProvider = await authenticationProviderService.getAllAuthenticationProviders(projectId);
+        const union = authProvider.map(ap => ap.targetType).join(' | ');
+        schema += 'union _Author = ' + union + '\n';
+
         for (let type of types) {
             schema += this.generateTypeString(type);
             schema += this.generateTypeInputString(type);
