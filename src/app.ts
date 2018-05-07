@@ -19,6 +19,7 @@ import * as auth from './controllers/auth';
 import { Strategy } from './passport/jwtStrategy';
 import { postAsset, getAsset } from './controllers/asset';
 import { getToken } from './controllers/userAuth';
+import * as apicache from 'apicache';
 
 // Create Express server
 export const app = express();
@@ -38,6 +39,8 @@ app.use(cors());
 
 app.use(express.static(path.join(__dirname, 'public'), { maxAge: 31557600000 }));
 
+let cache = apicache.middleware;
+
 /**
  * Primary app routes.
  */
@@ -48,9 +51,9 @@ app.post('/auth/token', auth.adminToken);
 app.get('/admin/content', privateApi.getContent);
 app.post('/admin/content', privateApi.postContent);
 
-app.get('/:projectId/asset/:filename/:format/:width', getAsset);
-app.get('/:projectId/asset/:filename/:format', getAsset);
-app.get('/:projectId/asset/:filename', getAsset);
+app.get('/:projectId/asset/:filename/:format/:width', cache('6 hours'), getAsset);
+app.get('/:projectId/asset/:filename/:format', cache('6 hours'), getAsset);
+app.get('/:projectId/asset/:filename', cache('6 hours'), getAsset);
 app.post('/:projectId/asset', postAsset);
 
 app.post('/:projectId/auth/:provider', getToken);

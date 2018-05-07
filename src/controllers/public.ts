@@ -9,6 +9,8 @@ import { Response, Request, NextFunction, Router } from 'express';
 import { dynamicJWT } from '../passport/dynamicJwt';
 import { auth } from 'google-auth-library';
 import { createLoaders } from '../data-loader';
+import * as apicache from 'apicache';
+let cache = apicache.middleware;
 
 export const publicApi = Router();
 
@@ -236,5 +238,5 @@ function canContinue(crud: string, method: string, type: Type, role?: string) {
     return false;
 }
 
-publicApi.get('/:projectId/api', getApi);
+publicApi.get('/:projectId/api', cache('1 hour'), getApi);
 publicApi.post('/:projectId/api', postApi);
