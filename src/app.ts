@@ -24,6 +24,8 @@ import * as apicache from 'apicache';
 // Create Express server
 export const app = express();
 
+app.disable('x-powered-by');
+
 // Express configuration
 app.set('port', process.env.PORT || 8000);
 app.use(compression());
