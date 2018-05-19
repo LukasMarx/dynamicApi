@@ -46,7 +46,6 @@ export class AssetService {
 
         gridFs.remove({ _id: id, root: 'assets' }, err => {
             if (err) {
-                console.log(err);
             }
         });
     }

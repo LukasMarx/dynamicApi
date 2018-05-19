@@ -148,7 +148,7 @@ const generateContentSchema = async (projectId: string) => {
             if (!canContinue('create', context.method, type, context.role)) {
                 return new Error('Unauthorized Access');
             }
-            return contentService.insert(projectId, type, args.input, context.method, context.user).catch(error => console.error(error));
+            return contentService.insert(projectId, type, args.input, context.method, context.user).catch();
         };
         resolvers.Mutation['update' + type.name] = (obj: any, args: any, context: any, info: any) => {
             if (context.readOnly) {
@@ -157,7 +157,7 @@ const generateContentSchema = async (projectId: string) => {
             if (!canContinue('update', context.method, type, context.role)) {
                 return new Error('Unauthorized Access');
             }
-            return contentService.update(projectId, type, args.id, args.input, context.method, context.user).catch(error => console.error(error));
+            return contentService.update(projectId, type, args.id, args.input, context.method, context.user).catch();
         };
         resolvers.Mutation['delete' + type.name] = (obj: any, args: any, context: any, info: any) => {
             if (context.readOnly) {
@@ -166,7 +166,7 @@ const generateContentSchema = async (projectId: string) => {
             if (!canContinue('delete', context.method, type, context.role)) {
                 return new Error('Unauthorized Access');
             }
-            return contentService.delete(projectId, type, args.id, context.method, context.user).catch(error => console.error(error));
+            return contentService.delete(projectId, type, args.id, context.method, context.user).catch();
         };
         resolvers.Query[type.name + 's'] = (obj: any, args: any, context: any, info: any) => {
             if (!canContinue('readAll', context.method, type, context.role)) {
@@ -189,7 +189,7 @@ const generateContentSchema = async (projectId: string) => {
                     context.method,
                     context.userId
                 )
-                .catch(error => console.error(error));
+                .catch();
         };
         resolvers.Query[type.name] = (obj: any, args: any, context: any, info: any) => {
             if (!canContinue('read', context.method, type, context.role)) {
@@ -207,7 +207,7 @@ const generateContentSchema = async (projectId: string) => {
                     context.method,
                     context.user
                 )
-                .catch(error => console.error(error));
+                .catch();
         };
     }
     return makeExecutableSchema({ typeDefs: s, resolvers: resolvers });

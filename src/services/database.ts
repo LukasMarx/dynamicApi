@@ -12,10 +12,8 @@ export class Database {
         }
 
         const startTime = new Date().getTime();
-        console.log('Connecting to Database');
         return mongo.MongoClient.connect(uri, { poolSize: 10 })
             .then(async client => {
-                console.log('Connection Established! Took: ' + (new Date().getTime() - startTime) + ' ms');
                 cachedDb = client.db('dynamicApi');
                 cachedDb.collection('types').createIndex({ projectId: 1, name: 1 }, { background: true, unique: true });
                 cachedDb.collection('values').createIndex({ type: 1, projectId: 1 }, { background: true });
@@ -27,7 +25,7 @@ export class Database {
                 cachedDb.collection('projects').createIndex({ id: 1 }, { background: true, unique: true });
                 return cachedDb;
             })
-            .catch(error => console.error(error));
+            .catch();
     }
 
     public async gridFs(): Promise<Grid.Grid> {

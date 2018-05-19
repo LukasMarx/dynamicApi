@@ -29,7 +29,6 @@ app.disable('x-powered-by');
 // Express configuration
 app.set('port', process.env.PORT || 8000);
 app.use(compression());
-app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(expressValidator());

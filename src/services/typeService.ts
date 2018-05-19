@@ -17,7 +17,6 @@ export class TypeService {
         const db = await database.connect();
         const types = <Collection<Type>>db.collection('types');
 
-        console.log('TypeService: Hitting Database');
         const cursor = types.find({ projectId: projectId });
         const result = await cursor.toArray();
         cache.set(projectId, result);
@@ -33,7 +32,6 @@ export class TypeService {
         const db = await database.connect();
         const types = <Collection<Type>>db.collection('types');
 
-        console.log('TypeService: Hitting Database');
         const result = await types.findOne({ projectId: projectId, name: name });
         cache.set(projectId + '_' + name, result);
         return result;
@@ -59,7 +57,6 @@ export class TypeService {
         const db = await database.connect();
         const types = <Collection<Type>>db.collection('types');
 
-        console.log('TypeService: Hitting Database');
         const result = await types.insertOne(copy);
         cache.del(projectId);
         return type;
@@ -86,7 +83,6 @@ export class TypeService {
         const db = await database.connect();
         const types = <Collection<Type>>db.collection('types');
 
-        console.log('TypeService: Hitting Database');
         await types.updateOne({ projectId: projectId, name: name }, { $set: copy });
         cache.del(projectId);
         cache.del(projectId + '_' + name);
@@ -97,7 +93,6 @@ export class TypeService {
         const db = await database.connect();
         const types = <Collection<Type>>db.collection('types');
 
-        console.log('TypeService: Hitting Database');
         await types.deleteOne({ projectId: projectId, name: name });
         cache.del(projectId);
         cache.del(projectId + '_' + name);

@@ -44,7 +44,7 @@ export const dynamicJWT = async function(req: Request, res: Response, next: Next
 
     jwt.verify(token, secret, config, (err, verified: any) => {
         if (err) {
-            console.error('JWT Error', err, err.stack);
+            //console.error('JWT Error', err, err.stack);
             req.authInfo = { method: 'anonymous' };
             return next();
         } else {

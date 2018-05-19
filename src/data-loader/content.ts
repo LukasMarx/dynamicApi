@@ -43,7 +43,6 @@ async function runAggregation(projectId: string, authMethod: string, userId: str
         queries.push(createQuery(reqParams, excluded));
     });
     const aggregation = createAggregationFromQueries(queries);
-    console.log(JSON.stringify(aggregation));
 
     const result = await values.aggregate(aggregation).toArray();
 

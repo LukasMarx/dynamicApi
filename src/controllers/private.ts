@@ -93,11 +93,11 @@ const generateContentSchema = async (projectId: string) => {
         });
 
         resolvers.Mutation['create' + type.name] = (obj: any, args: any, context: any, info: any) => {
-            return contentService.insert(projectId, type, args.input, 'admin', context.userId).catch(error => console.error(error));
+            return contentService.insert(projectId, type, args.input, 'admin', context.userId).catch();
         };
 
         resolvers.Mutation['update' + type.name] = (obj: any, args: any, context: any, info: any) => {
-            return contentService.update(args.projectId, type, args.input.id, args.input, 'admin', null).catch(error => console.error(error));
+            return contentService.update(args.projectId, type, args.input.id, args.input, 'admin', null).catch();
         };
 
         resolvers.Query[type.name + 's'] = (obj: any, args: any, context: any, info: any) => {
@@ -132,7 +132,7 @@ const generateContentSchema = async (projectId: string) => {
                     'admin',
                     context.userId
                 )
-                .catch(error => console.error(error));
+                .catch();
         };
     }
     return makeExecutableSchema({ typeDefs: s, resolvers: resolvers });

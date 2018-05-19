@@ -32,7 +32,6 @@ export async function genType(projectId: string, names: string[]) {
     const db = await database.connect();
     const types = <Collection<Type>>db.collection('types');
 
-    console.log('TypeLoader: Hitting Database');
     const queryResult = await types.aggregate([aggregation]).toArray();
 
     const entities = queryResult[0];
