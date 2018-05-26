@@ -57,7 +57,7 @@ export const getAsset = async (req: Request, res: Response) => {
         let transform = sharp();
         if (format) {
             if (format == 'jpg') {
-                transform = transform.flatten(true);
+                transform = transform.background({ r: 255, g: 255, b: 255, alpha: 1 }).flatten(true);
             }
             transform = transform.toFormat(format);
             res.type('image/' + format);
