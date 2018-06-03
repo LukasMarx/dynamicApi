@@ -45,18 +45,18 @@ let cache = apicache.middleware;
 /**
  * Primary app routes.
  */
-app.get('/admin/api', passport.authenticate('jwt', { session: false }), adminApi.getAdmin);
-app.post('/admin/api', passport.authenticate('jwt', { session: false }), adminApi.postAdmin);
-app.post('/auth/token', auth.adminToken);
+app.get('/api/v1/admin/api', passport.authenticate('jwt', { session: false }), adminApi.getAdmin);
+app.post('/api/v1/admin/api', passport.authenticate('jwt', { session: false }), adminApi.postAdmin);
+app.post('/api/v1/auth/token', auth.adminToken);
 
-app.get('/admin/content', privateApi.getContent);
-app.post('/admin/content', privateApi.postContent);
+app.get('/api/v1/admin/content', privateApi.getContent);
+app.post('/api/v1/admin/content', privateApi.postContent);
 
-app.get('/:projectId/asset/:filename/:format/:width', cache('6 hours'), getAsset);
-app.get('/:projectId/asset/:filename/:format', cache('6 hours'), getAsset);
-app.get('/:projectId/asset/:filename', cache('6 hours'), getAsset);
-app.post('/:projectId/asset', postAsset);
+app.get('/api/v1/:projectId/asset/:filename/:format/:width', cache('6 hours'), getAsset);
+app.get('/api/v1/:projectId/asset/:filename/:format', cache('6 hours'), getAsset);
+app.get('/api/v1/:projectId/asset/:filename', cache('6 hours'), getAsset);
+app.post('/api/v1/:projectId/asset', postAsset);
 
-app.post('/:projectId/auth/:provider', getToken);
+app.post('/api/v1/:projectId/auth/:provider', getToken);
 
-app.use('/', publicApi.publicApi);
+app.use('/api/v1/', publicApi.publicApi);
