@@ -1,7 +1,24 @@
-FROM node:latest
-RUN mkdir -p /usr/src/app
+FROM node:carbon-alpine
+
+
 WORKDIR /usr/src/app
-COPY . /usr/src/app
-RUN npm install
+
+COPY package*.json ./
+
+RUN apk add vips-dev fftw-dev --update-cache --repository https://dl-3.alpinelinux.org/alpine/edge/testing/
+RUN apk --no-cache --virtual build-dependencies add \
+    python \
+    make \
+    g++ \
+    && npm install \
+    && apk del build-dependencies
+
+COPY . .
+
+RUN npm run build
+
 EXPOSE 3000
-CMD [ "npm", "start" ]
+
+ENV PORT "3000"
+
+ENTRYPOINT npm run serve
