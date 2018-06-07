@@ -52,9 +52,9 @@ app.post('/api/v1/auth/token', auth.adminToken);
 app.get('/api/v1/admin/content', privateApi.getContent);
 app.post('/api/v1/admin/content', privateApi.postContent);
 
-app.get('/api/v1/:projectId/asset/:filename/:format/:width', cache('6 hours'), getAsset);
-app.get('/api/v1/:projectId/asset/:filename/:format', cache('6 hours'), getAsset);
-app.get('/api/v1/:projectId/asset/:filename', cache('6 hours'), getAsset);
+app.get('/api/v1/:projectId/asset/:filename/:format/:width', getAsset);
+app.get('/api/v1/:projectId/asset/:filename/:format', getAsset);
+app.get('/api/v1/:projectId/asset/:filename', getAsset);
 app.post('/api/v1/:projectId/asset', postAsset);
 
 app.post('/api/v1/:projectId/auth/:provider', getToken);

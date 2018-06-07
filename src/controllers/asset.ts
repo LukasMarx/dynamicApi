@@ -6,6 +6,12 @@ import { Asset } from '../models/asset';
 import * as sharp from 'sharp';
 import * as fs from 'fs';
 
+import * as redis from 'redis';
+import * as redisStreams from 'redis-streams';
+
+redisStreams(redis);
+const rClient = redis.createClient({ host: process.env.REDIS_HOST, port: process.env.REDIS_PORT, detect_buffers: true });
+
 export const postAsset = async (req: Request, res: Response) => {
     const gfs = await database.gridFs();
     const db = await database.connect();
@@ -42,10 +48,23 @@ export const postAsset = async (req: Request, res: Response) => {
 export const getAsset = async (req: Request, res: Response) => {
     const projectId = req.params.projectId;
     const filename = req.params.filename;
-    const gfs = await database.gridFs();
-
     const format = req.params.format;
     const width = req.params.width;
+
+    const exists = await new Promise<number>((resolve, reject) => {
+        rClient.exists(`asset-${projectId}-${filename}-${format}-${width}`, (err, exists) => {
+            if (err) return reject(err);
+
+            resolve(exists);
+        });
+    });
+    if (exists) {
+        console.info(`Reading image ${projectId}-${filename}-${format}-${width} from cache.`);
+        (<any>rClient).readStream(`asset-${projectId}-${filename}-${format}-${width}`).pipe(res);
+        return;
+    }
+
+    const gfs = await database.gridFs();
 
     try {
         const readStream = gfs.createReadStream({
@@ -55,6 +74,7 @@ export const getAsset = async (req: Request, res: Response) => {
         });
 
         readStream.on('error', function(err) {
+            console.log(err);
             res.sendStatus(400);
             return;
         });
@@ -72,8 +92,11 @@ export const getAsset = async (req: Request, res: Response) => {
             transform = transform.resize(parseInt(width));
         }
 
-        readStream.pipe(transform).pipe(res);
+        const tStream = readStream.pipe(transform);
+        tStream.pipe((<any>rClient).writeStream(`asset-${projectId}-${filename}-${format}-${width}`, 3600));
+        tStream.pipe(res);
     } catch (error) {
+        console.log(error);
         res.sendStatus(400);
     }
 };

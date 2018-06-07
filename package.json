@@ -13,16 +13,14 @@
         "build": "npm run build-ts",
         "serve": "node dist/server.js",
         "watch-node": "nodemon dist/server.js",
-        "watch":
-            "concurrently -k -p \"[{name}]\" -n \"Sass,TypeScript,Node\" -c \"yellow.bold,cyan.bold,green.bold\" \"npm run watch-ts\" \"npm run watch-node\"",
+        "watch": "concurrently -k -p \"[{name}]\" -n \"Sass,TypeScript,Node\" -c \"yellow.bold,cyan.bold,green.bold\" \"npm run watch-ts\" \"npm run watch-node\"",
         "test": "echo \"Error: no test specified\" && exit 0",
         "build-ts": "tsc",
         "watch-ts": "tsc -w",
         "tslint": "tslint -c tslint.json -p tsconfig.json",
         "debug": "npm run build && npm run watch-debug",
         "serve-debug": "nodemon --inspect dist/server.js",
-        "watch-debug":
-            "concurrently -k -p \"[{name}]\" -n \"Sass,TypeScript,Node\" -c \"yellow.bold,cyan.bold,green.bold\" \"npm run watch-ts\" \"npm run serve-debug\""
+        "watch-debug": "concurrently -k -p \"[{name}]\" -n \"Sass,TypeScript,Node\" -c \"yellow.bold,cyan.bold,green.bold\" \"npm run watch-ts\" \"npm run serve-debug\""
     },
     "dependencies": {
         "apicache": "^1.2.1",
@@ -52,6 +50,8 @@
         "parse-multipart": "^1.0.4",
         "passport": "^0.4.0",
         "passport-jwt": "^3.0.1",
+        "redis": "^2.8.0",
+        "redis-streams": "^1.1.0",
         "sharp": "^0.19.0"
     },
     "devDependencies": {
@@ -77,6 +77,7 @@
         "@types/node-cache": "^4.1.1",
         "@types/passport": "^0.4.2",
         "@types/passport-jwt": "^3.0.1",
+        "@types/redis": "^2.8.6",
         "@types/request": "^2.0.9",
         "@types/sharp": "^0.17.6",
         "@types/supertest": "^2.0.4",
