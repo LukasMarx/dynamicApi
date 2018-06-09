@@ -45,14 +45,18 @@ export const getAsset = async (req: Request, res: Response) => {
     const format = req.params.format;
     const width = req.params.width;
 
+    if (!filename || !projectId) {
+        return res.sendStatus(400);
+    }
+
     const exists = await new Promise<number>((resolve, reject) => {
-        rClient.exists(`asset-${projectId}-${filename}-${format}-${width}`, (err, exists) => {
+        rClient.exists(`asset-${projectId}-${filename}-${format || 'default'}-${width || 'default'}`, (err, exists) => {
             if (err) return reject(err);
             resolve(exists);
         });
     });
     if (exists) {
-        (<any>rClient).readStream(`asset-${projectId}-${filename}-${format}-${width}`).pipe(res);
+        (<any>rClient).readStream(`asset-${projectId}-${filename}-${format || 'default'}-${width || 'default'}`).pipe(res);
         return;
     }
 
@@ -85,8 +89,7 @@ export const getAsset = async (req: Request, res: Response) => {
         }
 
         const tStream = readStream.pipe(transform);
-        tStream.pipe((<any>rClient).writeStream(`asset-${projectId}-${filename}-${format}-${width}`, 86400));
-        tStream.pipe(res);
+        tStream.pipe((<any>rClient).writeThrough(`asset-${projectId}-${filename}-${format || 'default'}-${width || 'default'}`, 86400)).pipe(res);
     } catch (error) {
         res.sendStatus(400);
     }
