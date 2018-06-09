@@ -32,12 +32,6 @@ export const postAsset = async (req: Request, res: Response) => {
         };
         var writeStream = gfs.createWriteStream(options);
         fs.createReadStream(file.path).pipe(writeStream);
-        // const asset = new Asset();
-        // asset.fileName = file.name;
-        // asset.projectId = projectId;
-        // asset.size = file.size;
-        // asset.type = file.type;
-        // assets.insert(asset);
     });
     form.on('end', () => {
         res.sendStatus(200);
@@ -54,12 +48,10 @@ export const getAsset = async (req: Request, res: Response) => {
     const exists = await new Promise<number>((resolve, reject) => {
         rClient.exists(`asset-${projectId}-${filename}-${format}-${width}`, (err, exists) => {
             if (err) return reject(err);
-
             resolve(exists);
         });
     });
     if (exists) {
-        console.info(`Reading image ${projectId}-${filename}-${format}-${width} from cache.`);
         (<any>rClient).readStream(`asset-${projectId}-${filename}-${format}-${width}`).pipe(res);
         return;
     }
@@ -93,10 +85,9 @@ export const getAsset = async (req: Request, res: Response) => {
         }
 
         const tStream = readStream.pipe(transform);
-        tStream.pipe((<any>rClient).writeStream(`asset-${projectId}-${filename}-${format}-${width}`, 3600));
+        tStream.pipe((<any>rClient).writeStream(`asset-${projectId}-${filename}-${format}-${width}`, 86400));
         tStream.pipe(res);
     } catch (error) {
-        console.log(error);
         res.sendStatus(400);
     }
 };
