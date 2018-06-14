@@ -10,7 +10,22 @@ import * as redis from 'redis';
 import * as redisStreams from 'redis-streams';
 
 redisStreams(redis);
-const rClient = redis.createClient({ host: process.env.REDIS_HOST, port: process.env.REDIS_PORT, detect_buffers: true });
+let redisReady = false;
+let rClient: redis.RedisClient;
+try {
+    rClient = redis.createClient({ host: process.env.REDIS_HOST, port: parseInt(process.env.REDIS_PORT), detect_buffers: true });
+    rClient.on('error', function(err) {
+        console.log('Redis error: ' + err);
+    });
+    rClient.on('end', function(err) {
+        redisReady = false;
+    });
+    rClient.on('ready', function(err) {
+        redisReady = true;
+    });
+} catch (error) {
+    console.error(error);
+}
 
 export const postAsset = async (req: Request, res: Response) => {
     const gfs = await database.gridFs();
@@ -49,15 +64,17 @@ export const getAsset = async (req: Request, res: Response) => {
         return res.sendStatus(400);
     }
 
-    const exists = await new Promise<number>((resolve, reject) => {
-        rClient.exists(`asset-${projectId}-${filename}-${format || 'default'}-${width || 'default'}`, (err, exists) => {
-            if (err) return reject(err);
-            resolve(exists);
+    if (redisReady) {
+        const exists = await new Promise<number>((resolve, reject) => {
+            rClient.exists(`asset-${projectId}-${filename}-${format || 'default'}-${width || 'default'}`, (err, exists) => {
+                if (err) return resolve(0);
+                resolve(exists);
+            });
         });
-    });
-    if (exists) {
-        (<any>rClient).readStream(`asset-${projectId}-${filename}-${format || 'default'}-${width || 'default'}`).pipe(res);
-        return;
+        if (exists) {
+            (<any>rClient).readStream(`asset-${projectId}-${filename}-${format || 'default'}-${width || 'default'}`).pipe(res);
+            return;
+        }
     }
 
     const gfs = await database.gridFs();
@@ -89,7 +106,12 @@ export const getAsset = async (req: Request, res: Response) => {
         }
 
         const tStream = readStream.pipe(transform);
-        tStream.pipe((<any>rClient).writeThrough(`asset-${projectId}-${filename}-${format || 'default'}-${width || 'default'}`, 86400)).pipe(res);
+
+        if (redisReady) {
+            tStream.pipe((<any>rClient).writeStream(`asset-${projectId}-${filename}-${format || 'default'}-${width || 'default'}`, 86400));
+        }
+
+        tStream.pipe(res);
     } catch (error) {
         res.sendStatus(400);
     }

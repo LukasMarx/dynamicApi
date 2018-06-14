@@ -10,7 +10,7 @@ RUN apk --no-cache --virtual build-dependencies add \
     python \
     make \
     g++ \
-    && npm install \
+    && npm install --build-from-source=bcrypt \
     && apk del build-dependencies
 
 COPY . .

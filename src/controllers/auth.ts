@@ -17,7 +17,6 @@ export const adminToken = async (req: Request, res: Response) => {
 
         if (await bcrypt.compare(body.password, account.password)) {
             const token = {};
-
             const signedToken = jwt.sign(token, process.env['JWT_SECRET'], {
                 audience: process.env.TOKEN_AUDIENCE,
                 issuer: process.env.TOKEN_ISSUER,
@@ -28,6 +27,6 @@ export const adminToken = async (req: Request, res: Response) => {
         }
     } catch (error) {
         console.error(error);
-        return res.sendStatus(400);
     }
+    return res.sendStatus(400);
 };
