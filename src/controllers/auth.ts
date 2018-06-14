@@ -28,7 +28,6 @@ export const adminToken = async (req: Request, res: Response) => {
         }
     } catch (error) {
         console.error(error);
-    } finally {
         return res.sendStatus(400);
     }
 };
