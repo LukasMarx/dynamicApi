@@ -19,7 +19,6 @@ import * as auth from './controllers/auth';
 import { Strategy } from './passport/jwtStrategy';
 import { postAsset, getAsset } from './controllers/asset';
 import { getToken } from './controllers/userAuth';
-import * as apicache from 'apicache';
 
 // Create Express server
 export const app = express();
@@ -39,8 +38,6 @@ app.use(lusca.xssProtection(true));
 app.use(cors());
 
 app.use(express.static(path.join(__dirname, 'public'), { maxAge: 31557600000 }));
-
-let cache = apicache.middleware;
 
 /**
  * Primary app routes.
