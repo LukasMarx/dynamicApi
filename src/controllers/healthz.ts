@@ -7,5 +7,6 @@ export const healthz = async (req: Request, res: Response) => {
   if ((<any>db).serverConfig.isConnected()) {
     healthy = false;
   }
-  healthy ? res.sendStatus(200) : res.sendStatus(500);
+  if (healthy) return res.sendStatus(200);
+  else return res.sendStatus(500);
 };
