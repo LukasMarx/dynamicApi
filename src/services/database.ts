@@ -18,7 +18,6 @@ export class Database {
         poolSize: 10,
         ha: true,
         haInterval: 5000,
-        keepAlive: 1,
         connectTimeoutMS: 30000,
         socketTimeoutMS: 30000
       }
