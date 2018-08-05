@@ -16,6 +16,7 @@ import * as adminApi from './controllers/admin';
 import * as privateApi from './controllers/private';
 import * as publicApi from './controllers/public';
 import * as auth from './controllers/auth';
+import * as healthz from './controllers/healthz';
 import { Strategy } from './passport/jwtStrategy';
 import { postAsset, getAsset } from './controllers/asset';
 import { getToken } from './controllers/userAuth';
@@ -48,6 +49,8 @@ app.post('/api/v1/auth/token', auth.adminToken);
 
 app.get('/api/v1/admin/content', privateApi.getContent);
 app.post('/api/v1/admin/content', privateApi.postContent);
+
+app.get('/healthz', healthz.healthz);
 
 app.get('/api/v1/:projectId/asset/:filename/:format/:width', getAsset);
 app.get('/api/v1/:projectId/asset/:filename/:format', getAsset);
