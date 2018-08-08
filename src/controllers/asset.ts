@@ -72,6 +72,11 @@ export const getAsset = async (req: Request, res: Response) => {
       });
     });
     if (exists) {
+      if (format) {
+        res.set('Content-Type', 'image/' + format);
+      } else {
+        res.set('Content-Type', 'image/' + filename.split('.').pop());
+      }
       (<any>rClient).readStream(`asset-${projectId}-${filename}-${format || 'default'}-${width || 'default'}`).pipe(res);
       return;
     }
