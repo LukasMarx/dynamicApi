@@ -29,7 +29,7 @@ app.disable('x-powered-by');
 // Express configuration
 app.set('port', process.env.PORT || 8000);
 app.use(compression());
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '200kb' }));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(expressValidator());
 passport.use(Strategy);
