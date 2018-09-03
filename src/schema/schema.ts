@@ -11,6 +11,7 @@ import {
     authenticationProvider,
     authenticationProviders
 } from './resolvers/authenticationProvider';
+import { pages, createPage, updatePage } from './resolvers/page';
 
 let cachedDb = null;
 
@@ -124,6 +125,34 @@ const typeDefs = `
     pictureUrl: String
   }
 
+  type Widget{
+    top: Int
+    left: Int
+    width: Int
+    height: Int
+    component: String
+    configuration: String
+  }
+  
+  type Page {
+    id: String!
+    tab: String
+    widgets: [Widget]
+  }
+
+  input WidgetInput{
+    top: Int
+    left: Int
+    width: Int
+    height: Int
+    component: String
+  }
+
+  input PageInput {
+    tab: String
+    widgets: [WidgetInput]
+  }
+
   type Query{
     type(projectId: String!, name: String): Type
     types(projectId: String!): [Type]
@@ -134,6 +163,7 @@ const typeDefs = `
     asset(projectId: String!, name: String): Asset
     authenticationProviders(projectId: String!): [AuthenticationProvider]
     authenticationProvider(projectId: String!, id: String!): AuthenticationProvider
+    pages(projectId: String!, type: String!): [Page]
   }
 
   type Mutation{
@@ -146,31 +176,36 @@ const typeDefs = `
     updateAuthenticationProvider(projectId: String!, id: String!, authProvider: AuthenticationProviderInput!): AuthenticationProvider
     deleteAuthenticationProvider(projectId: String!, id: String!): AuthenticationProvider
     deleteAsset(projectId: String!, id: String!): String
+    createPage(projectId: String!, type: String!, page: PageInput!): Page
+    updatePage(projectId: String!, id: String!, page: PageInput!): Page
   }
 `;
 
 const resolvers = {
     Query: {
-        type: type,
-        types: types,
-        project: project,
-        projects: projects,
-        authKey: authKey,
-        asset: asset,
-        assets: assets,
-        authenticationProvider: authenticationProvider,
-        authenticationProviders: authenticationProviders
+        type,
+        types,
+        project,
+        projects,
+        authKey,
+        asset,
+        assets,
+        authenticationProvider,
+        authenticationProviders,
+        pages: pages
     },
     Project: {},
     Mutation: {
-        createType: createType,
-        updateType: updateType,
-        removeType: removeType,
-        createProject: createProject,
-        createAuthenticationProvider: createAuthenticationProvider,
-        updateAuthenticationProvider: updateAuthenticationProvider,
-        deleteAuthenticationProvider: deleteAuthenticationProvider,
-        deleteAsset: deleteAsset
+        createType,
+        updateType,
+        removeType,
+        createProject,
+        createAuthenticationProvider,
+        updateAuthenticationProvider,
+        deleteAuthenticationProvider,
+        deleteAsset: deleteAsset,
+        createPage,
+        updatePage
     }
 };
 
